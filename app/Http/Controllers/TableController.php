@@ -7,7 +7,7 @@ use App\Models\Sale;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class TableController extends Controller
+class TableController
 {
     public function index()
     {

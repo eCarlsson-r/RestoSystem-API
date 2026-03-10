@@ -7,7 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class EmployeeController extends Controller
+class EmployeeController
 {
     public function index()
     {

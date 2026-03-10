@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\NotificationSubscription;
 use Illuminate\Http\Request;
 
-class NotificationController extends Controller
+class NotificationController
 {
     public function subscribe(Request $request)
     {

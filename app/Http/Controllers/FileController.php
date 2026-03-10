@@ -6,7 +6,7 @@ use App\Models\File as FileModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 
-class FileController extends Controller
+class FileController
 {
     public function show(Request $request)
     {

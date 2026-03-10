@@ -11,7 +11,7 @@ use App\Models\StockLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class PurchasingController extends Controller
+class PurchasingController
 {
     public function storeOrder(Request $request)
     {

@@ -7,7 +7,7 @@ use App\Models\Recipe;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class ProductController extends Controller
+class ProductController
 {
     public function index(Request $request)
     {

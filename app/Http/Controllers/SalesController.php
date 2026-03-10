@@ -199,6 +199,27 @@ class SalesController
         });
     }
 
+    // app/Http/Controllers/Api/SalesController.php
+
+    public function moveTable(Request $request) {
+        return DB::transaction(function() use ($request) {
+            $oldTable = $request->old_table;
+            $newTable = $request->new_table;
+
+            // 1. Find active sale
+            $sale = Sale::where('table_number', $oldTable)->where('status', 'O')->first();
+            
+            // 2. Update Sale record
+            $sale->update(['table_number' => $newTable]);
+
+            // 3. Update Table Statuses
+            DB::table('tables')->where('table_number', $oldTable)->update(['status' => 'V']);
+            DB::table('tables')->where('table_number', $newTable)->update(['status' => 'O']);
+
+            return response()->json(['message' => 'Table moved successfully']);
+        });
+    }
+
     /**
      * Update the specified resource in storage.
      */

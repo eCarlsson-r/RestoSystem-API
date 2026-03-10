@@ -9,7 +9,7 @@ use App\Models\StockMovementRecord;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class StockController extends Controller
+class StockController
 {
     public function index(Request $request)
     {

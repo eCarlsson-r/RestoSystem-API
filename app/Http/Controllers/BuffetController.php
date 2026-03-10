@@ -9,7 +9,7 @@ use App\Models\SaleRecord;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class BuffetController extends Controller
+class BuffetController
 {
     public function index()
     {

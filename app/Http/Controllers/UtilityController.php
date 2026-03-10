@@ -6,7 +6,7 @@ use App\Models\Utility;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class UtilityController extends Controller
+class UtilityController
 {
     public function getCities()
     {

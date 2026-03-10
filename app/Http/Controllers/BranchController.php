@@ -8,7 +8,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class BranchController extends Controller
+class BranchController
 {
     public function index(Request $request)
     {

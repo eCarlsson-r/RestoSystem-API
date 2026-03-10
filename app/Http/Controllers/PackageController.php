@@ -7,7 +7,7 @@ use App\Models\PackageProduct;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class PackageController extends Controller
+class PackageController
 {
     public function index()
     {
