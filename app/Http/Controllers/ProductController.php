@@ -11,10 +11,14 @@ class ProductController
 {
     public function index(Request $request)
     {
-        $query = Product::with(['category', 'file']);
+        $query = Product::with(['category'])->where('category_id', $request->category)->where('soldout', 0);
         
-        if ($request->has('branch')) {
+        /*if ($request->has('branch')) {
             $query->where('soldout', 0); // Simplified branch logic for now
+        }*/
+
+        if ($request->has('q')) {
+            $query->where('name', 'like', '%' . $request->q . '%');
         }
 
         $products = $query->get();
@@ -28,7 +32,7 @@ class ProductController
 
     public function show($id)
     {
-        $product = Product::with(['category'])->where('code', $id)->first();
+        $product = Product::with(['category'])->findOrFail($id)->first();
 
         if (!$product) {
             return response()->json(['err' => 1, 'msg' => 'product-not-exist']);
@@ -49,20 +53,16 @@ class ProductController
     {
         $productCode = $request->input('product-code');
         $categoryId = $request->input('category_id');
-        
-        // Logical code prefixing from legacy
-        $finalCode = $categoryId . str_pad($productCode, 3, '0', STR_PAD_LEFT);
 
         $product = Product::updateOrCreate(
-            ['code' => $finalCode],
+            ['id' => $productCode],
             [
-                'name' => $request->input('product-name'),
-                'desc' => $request->input('product-desc'),
+                'name' => $request->input('name'),
+                'desc' => $request->input('description'),
                 'category_id' => $categoryId,
-                'price' => $request->input('product-price'),
-                'cost' => $request->input('product-cost'),
-                'discount' => $request->input('product-discount'),
-                'img_no' => $request->input('product-img-no', 0)
+                'price' => $request->input('price'),
+                'cost' => $request->input('cost'),
+                'discount' => $request->input('discount')
             ]
         );
 
@@ -91,7 +91,7 @@ class ProductController
 
     public function destroy($id)
     {
-        $product = Product::where('code', $id)->first();
+        $product = Product::findOrFail($id);
         if ($product) {
             $product->update(['category_id' => null]); // Legacy "remove" just unsets category
             return response()->json(['err' => 0, 'msg' => 'Product removed']);

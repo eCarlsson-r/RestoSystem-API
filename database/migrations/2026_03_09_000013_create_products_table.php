@@ -9,11 +9,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('products', function (Blueprint $table) {
-            $table->string('code', 5)->primary();
+            $table->id();
             $table->string('name', 100);
-            $table->string('desc', 200)->nullable();
-            $table->integer('img_no')->default(0);
-            $table->string('category_id', 2);
+            $table->string('description', 200)->nullable();
+            $table->foreignId('category_id')->constrained('categories')->onUpdate('cascade')->onDelete('cascade');
             $table->integer('price');
             $table->integer('cost');
             $table->tinyInteger('discount')->default(0);

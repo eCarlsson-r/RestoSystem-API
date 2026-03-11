@@ -11,10 +11,8 @@ class ProductSeeder extends Seeder
     {
         DB::table('products')->insert([
             [
-                'code' => 'NS001',
                 'name' => 'Nasi Putih',
-                'desc' => '',
-                'img_no' => 0,
+                'description' => '',
                 'category_id' => 2, // NS -> 2
                 'price' => 5000,
                 'cost' => 600,

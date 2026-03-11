@@ -12,4 +12,14 @@ class Table extends Model
     ];
 
     protected $guarded = ['id'];
+
+    public function sales()
+    {
+        return $this->hasMany(Sale::class, 'table_id')->where('status', '<>', 'D')->where('status', '<>', 'X');
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
+    }
 }

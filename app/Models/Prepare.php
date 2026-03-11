@@ -6,11 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Prepare extends Model
 {
-    protected $primaryKey = 'code';
-    public $incrementing = false;
-    protected $keyType = 'string';
-
     protected $fillable = [
-        'code', 'name', 'cost', 'qty', 'unit'
+        'name', 'cost', 'qty', 'unit'
     ];
 }

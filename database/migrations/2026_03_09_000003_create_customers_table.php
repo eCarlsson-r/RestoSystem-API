@@ -19,8 +19,6 @@ return new class extends Migration
             $table->string('email', 50)->nullable();
             $table->integer('discount')->default(0);
             $table->integer('tax')->default(0);
-            $table->integer('img_no')->default(0);
-            $table->integer('account_id')->nullable();
             $table->timestamps();
         });
     }

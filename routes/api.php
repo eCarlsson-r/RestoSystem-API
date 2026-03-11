@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\KitchenController;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SalesController;
@@ -49,6 +50,7 @@ Route::prefix('rooms')->group(function () {
 
 Route::prefix('sales')->group(function () {
     Route::get('/', [SalesController::class, 'index']);
+    Route::get('/{id}', [SalesController::class, 'show']);
     Route::post('/', [SalesController::class, 'store']);
     Route::post('/checkout', [SalesController::class, 'checkout']);
     Route::post('/split', [SalesController::class, 'splitSales']);
@@ -136,6 +138,10 @@ Route::prefix('ingredients')->group(function () {
     Route::get('/', [IngredientController::class, 'index']);
     Route::post('/', [IngredientController::class, 'store']);
     Route::delete('/{code}', [IngredientController::class, 'destroy']);
+});
+
+Route::prefix('kitchen')->group(function () {
+    Route::get('/tickets', [KitchenController::class, 'getTickets']);
 });
 
 Route::get('/dashboard', [DashboardController::class, 'index']);

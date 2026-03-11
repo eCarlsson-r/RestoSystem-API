@@ -12,11 +12,11 @@ class PrepareRecipe extends Model
 
     public function prepare()
     {
-        return $this->belongsTo(Prepare::class, 'prepare_id', 'code');
+        return $this->belongsTo(Prepare::class);
     }
 
     public function ingredient()
     {
-        return $this->belongsTo(Ingredient::class, 'ingredient_id', 'code');
+        return $this->belongsTo(Ingredient::class);
     }
 }

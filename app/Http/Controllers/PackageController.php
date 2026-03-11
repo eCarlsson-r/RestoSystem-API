@@ -19,13 +19,12 @@ class PackageController
     {
         return DB::transaction(function () use ($request) {
             $package = Package::updateOrCreate(
-                ['code' => $request->input('package-code')],
+                ['id' => $request->input('id')],
                 [
-                    'name' => $request->input('package-name'),
-                    'desc' => $request->input('package-desc'),
-                    'price' => $request->input('package-price'),
-                    'type' => $request->input('package-type', 'REGULAR'),
-                    'img_no' => $request->input('package-img-no', 0)
+                    'name' => $request->input('name'),
+                    'description' => $request->input('description'),
+                    'price' => $request->input('price'),
+                    'type' => $request->input('type', 'REGULAR')
                 ]
             );
 
@@ -46,7 +45,7 @@ class PackageController
 
     public function destroy($code)
     {
-        Package::where('code', $code)->delete();
+        Package::findOrFail($code)->delete();
         return response()->json(['err' => 0, 'msg' => 'Package removed']);
     }
 }

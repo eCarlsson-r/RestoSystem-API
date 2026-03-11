@@ -9,11 +9,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('ingredients', function (Blueprint $table) {
-            $table->string('code', 5)->primary();
+            $table->id();
             $table->string('name', 100);
             $table->string('desc', 200)->nullable();
             $table->string('unit', 10);
-            $table->integer('img_no')->default(0);
             $table->timestamps();
         });
     }

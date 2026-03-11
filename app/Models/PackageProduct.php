@@ -12,11 +12,11 @@ class PackageProduct extends Model
 
     public function package()
     {
-        return $this->belongsTo(Package::class, 'package_id', 'code');
+        return $this->belongsTo(Package::class);
     }
 
     public function product()
     {
-        return $this->belongsTo(Product::class, 'product_id', 'code');
+        return $this->belongsTo(Product::class);
     }
 }

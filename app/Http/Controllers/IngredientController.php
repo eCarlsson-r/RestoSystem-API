@@ -19,12 +19,11 @@ class IngredientController
     public function store(Request $request)
     {
         $ingredient = Ingredient::updateOrCreate(
-            ['code' => $request->input('ingr-code')],
+            ['id' => $request->input('id')],
             [
-                'name' => $request->input('ingr-name'),
-                'desc' => $request->input('ingr-desc'),
-                'unit' => $request->input('ingr-unit'),
-                'img_no' => $request->input('ingr-img-no', 0)
+                'name' => $request->input('name'),
+                'description' => $request->input('description'),
+                'unit' => $request->input('unit')
             ]
         );
 
@@ -35,9 +34,9 @@ class IngredientController
         ]);
     }
 
-    public function destroy($code)
+    public function destroy($id)
     {
-        Ingredient::where('code', $code)->delete();
+        Ingredient::findOrFail($id)->delete();
         return response()->json(['err' => 0, 'msg' => 'Ingredient removed']);
     }
 }

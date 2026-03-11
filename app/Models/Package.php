@@ -6,16 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class Package extends Model
 {
-    protected $primaryKey = 'code';
-    public $incrementing = false;
-    protected $keyType = 'string';
-
     protected $fillable = [
-        'code', 'name', 'price', 'desc', 'img_no'
+        'name', 'price', 'description'
     ];
 
     public function products()
     {
-        return $this->hasMany(PackageProduct::class, 'package_id', 'code');
+        return $this->hasMany(PackageProduct::class);
     }
 }

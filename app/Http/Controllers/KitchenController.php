@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\SaleRecord;
 
 class KitchenController
 {
@@ -17,24 +18,25 @@ class KitchenController
     public function getTickets(Request $request) {
         $station = $request->station; // e.g., 'KTCN'
 
-        return SalesRecord::where('item-status', 'O')
+        return SaleRecord::where('item_status', 'O')
             ->whereHas('product.category', function($q) use ($station) {
-                $q->where('kitchen-process', $station);
+                $q->where('kitchen_process', $station);
             })
-            ->with(['sales', 'product'])
+            ->with(['sale', 'product'])
             ->get()
-            ->groupBy('sales-id')
+            ->groupBy('sale_id')
             ->map(function($items) {
-                $header = $items->first()->sales;
+                $header = $items->first()->sale;
+                print_r($header);
                 return [
-                    'sales_id' => $header->id,
-                    'table_number' => $header->{'table-number'},
-                    'time_elapsed' => now()->diffInMinutes($items->first()->{'order-time'}),
+                    'sales_id' => $header->{'sale_id'},
+                    'table_number' => $header->{'table_number'},
+                    'time_elapsed' => now()->diffInMinutes($items->first()->{'order_time'}),
                     'items' => $items->map(fn($i) => [
-                        'id' => $i->{'sales-record-id'},
-                        'name' => $i->product->{'product-name'},
+                        'id' => $i->{'id'},
+                        'name' => $i->product->{'name'},
                         'qty' => 1, // Based on your schema, each row is an item
-                        'note' => $i->{'item-note'}
+                        'note' => $i->{'item_note'}
                     ])
                 ];
             })->values();

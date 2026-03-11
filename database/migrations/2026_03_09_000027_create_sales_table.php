@@ -13,10 +13,9 @@ return new class extends Migration
     {
         Schema::create('sales', function (Blueprint $table) {
             $table->id();
-            $table->string('branch_id', 5);
-            $table->string('table_number', 11);
-            $table->integer('floor_number');
-            $table->foreignId('employee_id')->constrained('users');
+            $table->foreignId('branch_id')->constrained('branches');
+            $table->foreignId('table_id')->constrained('tables');
+            $table->foreignId('employee_id')->constrained('employees');
             $table->foreignId('customer_id')->constrained('customers');
             $table->date('date');
             $table->time('time');

@@ -21,13 +21,12 @@ class BuffetController
     {
         return DB::transaction(function () use ($request) {
             $package = Package::updateOrCreate(
-                ['code' => $request->input('package_id')],
+                ['id' => $request->input('package_id')],
                 [
                     'name' => $request->input('package_name'),
                     'desc' => $request->input('package_desc'),
                     'price' => $request->input('package_price'),
-                    'type' => 'BUFFET',
-                    'img_no' => $request->input('package_img_no', 0)
+                    'type' => 'BUFFET'
                 ]
             );
 

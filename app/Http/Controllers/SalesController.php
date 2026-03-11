@@ -16,52 +16,71 @@ class SalesController
      */
     public function index(Request $request)
     {
-        $sale = Sale::with('branch', 'employee', 'customer')->where('status', '<>', 'X');
+        $sale = Sale::with('branch', 'employee', 'customer', 'records.product', 'records.package')->where('status', '<>', 'X');
         if ($request->branch_id) $sale->where('branch_id', $request->branch_id); 
-        return $sale->get();
+
+        return response()->json([
+            'err' => 0,
+            'msg' => '',
+            'data' => $sale->get()
+        ]);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    // app/Http/Controllers/Api/SalesController.php
-
     public function store(Request $request) {
-        // 1. Create the Sales Header
-        $sale = Sale::create([
-            'branch_id' => $request->branch_id,
-            'table_number' => $request->table_number,
-            'floor_number' => $request->floor_number,
-            'employee_id' => $request->user()->id,
-            'customer_id' => $request->customer_id, // Default guest
-            'date' => now()->format('Y-m-d'),
-            'time' => now()->format('H:i:s'),
-            'discount' => $request->discount,
-            'tax' => $request->tax,
-            'status' => 'O', // Order Open
-        ]);
+        return DB::transaction(function() use ($request) {
+            $salesId = $request->input('sales_id');
+            $branch = $request->input('branch_id');
+            
+            // 1. If no sales_id, create the header (First order for this table)
+            if (!$salesId) {
+                $sale = Sale::create([
+                    'branch_id' => $branch,
+                    'table_id' => $request->input('table_id'),
+                    'employee_id' => $request->user()->id,
+                    'customer_id' => $request->input('customer_id', 1),
+                    'date' => now()->toDateString(),
+                    'time' => now()->toTimeString(),
+                    'status' => 'O',
+                ]);
+                $salesId = $sale->id;
 
-        // 2. Loop through ticket items
-        foreach($request->items as $item) {
-            SaleRecord::create([
-                'sale_id' => $sale->id,
-                'item_type' => 'product',
-                'item_code' => $item['product-code'],
-                'item_price' => $item['product-price'],
-                'discount_pcnt' => 0,
-                'discount_amnt' => 0,
-                'item_note' => $item['note'],
-                'item_status' => 'O', // Open
-                'order_employee' => $request->user()->id,
-                'order_date' => now()->format('Y-m-d'),
-                'order_time' => now()->format('H:i:s')
+                // Mark table as Occupied
+                Table::findOrFail($request->input('table_id'))->update(['status' => 'occupied']);
+            }
+
+            // 2. Add the items (The "Incremental" part)
+            $kitchenItems = 0;
+            $barItems = 0;
+
+            foreach ($request->items as $item) {
+                // Note: Each item in the loop is a single sales-record
+                SaleRecord::create([
+                    'sales_id' => $salesId,
+                    'item_type' => $item['item_type'], // product or package
+                    'item-code' => $item['item_code'],
+                    'item_note' => $item['item_note'] ?? '',
+                    'item_status' => 'O',
+                    'item_price' => $item['price'],
+                    'order_employee' => $request->user()->id
+                ]);
+
+                // Check routing for notifications
+                if ($item['kitchen_process'] === 'KTCN') $kitchenItems++;
+                if ($item['kitchen_process'] === 'BART') $barItems++;
+            }
+
+            // 3. Trigger Notifications (Laravel Reverb or WebPush)
+            // This is where you notify the KDS we built earlier
+            $this->notifyStations($branch, $kitchenItems, $barItems, $salesId);
+
+            return response()->json([
+                'status' => 'success', 
+                'sales_id' => $salesId
             ]);
-        }
-
-        $table = Table::where('table_number', $request->table_number)->where('floor_number', $request->floor_number)->first();
-        $table->update(['table_status' => 'O']);
-
-        return response()->json(['message' => 'Order sent to kitchen', 'sale_id' => $sale->id]);
+        });
     }
 
     /**
@@ -69,7 +88,7 @@ class SalesController
      */
     public function show(string $id)
     {
-        return Sale::with('branch', 'employee', 'customer')->findOrFail($request->sales_id);
+        return Sale::with('branch', 'employee', 'customer', 'records.product', 'records.package')->findOrFail($id);
     }
     
     public function checkout(Request $request) {
@@ -150,7 +169,7 @@ class SalesController
     public function splitSales(Request $request)
     {
         return DB::transaction(function () use ($request) {
-            $originalSale = Sale::findOrFail($request->sales_id);
+            $originalSale = Sale::findOrFail($request->original_sales_id);
             
             // Create new sale
             $newSale = Sale::create([
@@ -164,7 +183,7 @@ class SalesController
                 'status' => 'O',
             ]);
 
-            $itemsToMove = $request->input('items', []); // Array of record IDs and qtys
+            $itemsToMove = $request->input('record_ids', []); // Array of record IDs and qtys
             foreach ($itemsToMove as $move) {
                 $record = SaleRecord::findOrFail($move['id']);
                 
@@ -226,6 +245,19 @@ class SalesController
     public function update(Request $request, string $id)
     {
         //
+    }
+
+    public function updateCustomer(Request $request) {
+        $sale = Sale::findOrFail($request->sales_id);
+        $customer = Customer::findOrFail($request->customer_id);
+
+        $sale->update([
+            'sales-customer' => $customer->id,
+            // We can store a snapshot of tax at the time of sale
+            'sales-tax-percent' => $customer->{'tax'} 
+        ]);
+
+        return response()->json(['message' => 'Customer linked', 'tax' => $customer->{'tax'}]);
     }
 
     /**

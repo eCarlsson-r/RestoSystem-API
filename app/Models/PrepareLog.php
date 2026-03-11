@@ -12,6 +12,6 @@ class PrepareLog extends Model
 
     public function prepare()
     {
-        return $this->belongsTo(Prepare::class, 'prepare_id', 'code');
+        return $this->belongsTo(Prepare::class);
     }
 }

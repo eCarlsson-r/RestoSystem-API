@@ -13,7 +13,6 @@ return new class extends Migration
             $table->string('name', 500);
             $table->string('desc', 1000)->nullable();
             $table->string('unit', 5);
-            $table->integer('img_no')->default(0);
             $table->timestamps();
         });
     }

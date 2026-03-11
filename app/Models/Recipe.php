@@ -12,11 +12,11 @@ class Recipe extends Model
 
     public function product()
     {
-        return $this->belongsTo(Product::class, 'product_id', 'code');
+        return $this->belongsTo(Product::class);
     }
 
     public function ingredient()
     {
-        return $this->belongsTo(Ingredient::class, 'ingredient_id', 'code');
+        return $this->belongsTo(Ingredient::class);
     }
 }

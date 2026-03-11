@@ -14,9 +14,8 @@ class SaleSeeder extends Seeder
             [
                 'id' => 1,
                 'branch_id' => 1,
-                'table_number' => '1',
-                'floor_number' => 1,
-                'employee_id' => 3, // demo.cashier
+                'table_id' => 1,
+                'employee_id' => 2, // demo.cashier
                 'customer_id' => 1,
                 'date' => '2024-03-03',
                 'time' => '12:28:16',
@@ -29,8 +28,7 @@ class SaleSeeder extends Seeder
             [
                 'id' => 4,
                 'branch_id' => 1,
-                'table_number' => '1',
-                'floor_number' => 1,
+                'table_id' => 1,
                 'employee_id' => 1, // demo.admin
                 'customer_id' => 1,
                 'date' => '2024-04-01',
@@ -52,7 +50,7 @@ class SaleSeeder extends Seeder
             [
                 'sale_id' => 1,
                 'item_type' => 'product',
-                'item_code' => 'NS001',
+                'item_code' => 1,
                 'item_price' => 5000,
                 'discount_pcnt' => 0,
                 'discount_amnt' => 0,
@@ -68,7 +66,7 @@ class SaleSeeder extends Seeder
             [
                 'sale_id' => 4,
                 'item_type' => 'product',
-                'item_code' => 'NS001',
+                'item_code' => 1,
                 'item_price' => 5000,
                 'discount_pcnt' => 0,
                 'discount_amnt' => 0,

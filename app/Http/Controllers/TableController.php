@@ -9,12 +9,12 @@ use Illuminate\Support\Facades\DB;
 
 class TableController
 {
-    public function index()
+    public function index(Request $request)
     {
         return response()->json([
             'err' => 0,
             'msg' => '',
-            'data' => Table::all()
+            'data' => Table::with('sales')->where('floor_number', $request->input('floor'))->get()
         ]);
     }
 
@@ -54,13 +54,25 @@ class TableController
 
     public function useTable(Request $request)
     {
-        Table::where([
+        $table = Table::where([
             'table_number' => $request->table_number,
             'floor_number' => $request->floor_number,
             'branch_id' => $request->branch_id,
-        ])->update(['status' => 'occupied']);
+        ]);
+        
+        $table->update(['status' => 'occupied']);
 
-        return response()->json(['err' => 0, 'msg' => 'Table marked as occupied']);
+        $sales = Sale::create([
+            'branch_id' => $request->branch_id,
+            'table_id' => $table->id,
+            'employee_id' => $request->user()->id,
+            'customer_id' => $request->input('customer_id', 1),
+            'date' => now()->toDateString(),
+            'time' => now()->toTimeString(),
+            'status' => 'O',
+        ]);
+
+        return response()->json(['err' => 0, 'msg' => 'Table marked as occupied', 'data' => [$sales->id]]);
     }
 
     public function releaseTable(Request $request)

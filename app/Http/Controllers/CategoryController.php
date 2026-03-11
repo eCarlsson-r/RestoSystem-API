@@ -9,7 +9,7 @@ class CategoryController
 {
     public function index()
     {
-        $categories = Category::all(['id', 'name', 'description', 'img_no']);
+        $categories = Category::all();
         
         return response()->json([
             'err' => 0,
@@ -21,12 +21,11 @@ class CategoryController
     public function store(Request $request)
     {
         $category = Category::updateOrCreate(
-            ['id' => $request->input('category-id')], // Adjusted for manual ID if provided
+            ['id' => $request->input('id')], // Adjusted for manual ID if provided
             [
-                'name' => $request->input('category-name'),
-                'kitchen_process' => $request->input('kitchen-process'),
-                'description' => $request->input('category-desc'),
-                'img_no' => $request->input('category_img_no', 0)
+                'name' => $request->input('name'),
+                'kitchen_process' => $request->input('kitchen_process'),
+                'description' => $request->input('description')
             ]
         );
 

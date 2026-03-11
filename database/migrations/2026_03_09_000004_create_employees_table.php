@@ -21,8 +21,7 @@ return new class extends Migration
             $table->string('phone', 20)->nullable();
             $table->string('mobile', 20)->nullable();
             $table->string('email', 50)->nullable();
-            $table->integer('img_no')->default(0);
-            $table->integer('account_id')->nullable();
+            $table->foreignId('account_id')->constrained('users')->onUpdate('cascade')->onDelete('cascade');
             $table->timestamps();
         });
     }
