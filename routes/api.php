@@ -55,6 +55,7 @@ Route::prefix('sales')->group(function () {
     Route::post('/checkout', [SalesController::class, 'checkout']);
     Route::post('/split', [SalesController::class, 'splitSales']);
     Route::post('/merge', [SalesController::class, 'mergeSales']);
+    Route::get('/orders/{salesId}', [SalesController::class, 'getActiveCaptainOrder']);
 });
 
 Route::prefix('employees')->group(function () {
@@ -119,6 +120,14 @@ Route::prefix('products')->group(function () {
     Route::post('/', [ProductController::class, 'store']);
     Route::delete('/{id}', [ProductController::class, 'destroy']);
     Route::get('/{id}/recipe', [ProductController::class, 'getRecipe']);
+});
+
+Route::prefix('prepare')->group(function () {
+    Route::get('/', [PrepareController::class, 'index']);
+    Route::get('/{id}', [PrepareController::class, 'show']);
+    Route::post('/', [PrepareController::class, 'store']);
+    Route::delete('/{id}', [PrepareController::class, 'destroy']);
+    Route::get('/{id}/recipe', [PrepareController::class, 'getRecipe']);
 });
 
 Route::prefix('categories')->group(function () {

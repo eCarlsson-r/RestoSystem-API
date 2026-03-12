@@ -18,20 +18,20 @@ class KitchenController
     public function getTickets(Request $request) {
         $station = $request->station; // e.g., 'KTCN'
 
-        return SaleRecord::where('item_status', 'O')
+        $tickets = SaleRecord::where('item_status', 'O')
             ->whereHas('product.category', function($q) use ($station) {
                 $q->where('kitchen_process', $station);
             })
-            ->with(['sale', 'product'])
+            ->with(['sale', 'sale.table', 'product'])
             ->get()
             ->groupBy('sale_id')
             ->map(function($items) {
                 $header = $items->first()->sale;
-                print_r($header);
                 return [
-                    'sales_id' => $header->{'sale_id'},
-                    'table_number' => $header->{'table_number'},
-                    'time_elapsed' => now()->diffInMinutes($items->first()->{'order_time'}),
+                    'sales_id' => $header->{'id'},
+                    'table_number' => $header->table->{'table_number'},
+                    'floor_number' => $header->table->{'floor_number'},
+                    'time_elapsed' => round(now()->diffInMinutes($items->first()->{'order_time'})),
                     'items' => $items->map(fn($i) => [
                         'id' => $i->{'id'},
                         'name' => $i->product->{'name'},
@@ -40,6 +40,12 @@ class KitchenController
                     ])
                 ];
             })->values();
+
+        return response()->json([
+            'err' => 0,
+            'msg' => '',
+            'data' => $tickets
+        ]);
     }
 
     /**

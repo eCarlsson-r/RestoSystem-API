@@ -16,7 +16,7 @@ class EmployeeSeeder extends Seeder
                 'branch_id' => 1, // DMBRC
                 'gender' => 'F',
                 'status' => 'J',
-                'job_type' => 'WAITER',
+                'job_type' => 'SERVICE-WT',
                 'join_date' => '2024-01-01',
                 'quit_date' => null,
                 'home_address' => '',
@@ -33,7 +33,7 @@ class EmployeeSeeder extends Seeder
                 'branch_id' => 1, // DMBRC
                 'gender' => 'F',
                 'status' => 'J',
-                'job_type' => 'CASHIER',
+                'job_type' => 'SERVICE-CH',
                 'join_date' => '2024-01-01',
                 'quit_date' => null,
                 'home_address' => '',

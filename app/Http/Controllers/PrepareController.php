@@ -2,16 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Product;
-use App\Models\Recipe;
+use App\Models\Prepare;
+use App\Models\PrepareRecipe;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class ProductController
+class PrepareController
 {
     public function index(Request $request)
     {
-        $query = Product::with(['category'])->where('category_id', $request->category)->where('soldout', 0);
+        $query = Prepare::where('category_id', $request->category)->where('soldout', 0);
         
         /*if ($request->has('branch')) {
             $query->where('soldout', 0); // Simplified branch logic for now
@@ -21,50 +21,50 @@ class ProductController
             $query->where('name', 'like', '%' . $request->q . '%');
         }
 
-        $products = $query->get();
+        $prepares = $query->get();
 
         return response()->json([
             'err' => 0,
             'msg' => '',
-            'data' => $products
+            'data' => $prepares
         ]);
     }
 
     public function show($id)
     {
-        $product = Product::with(['category'])->findOrFail($id)->first();
+        $prepare = Prepare::findOrFail($id)->first();
 
-        if (!$product) {
-            return response()->json(['err' => 1, 'msg' => 'product-not-exist']);
+        if (!$prepare) {
+            return response()->json(['err' => 1, 'msg' => 'prepare-not-exist']);
         }
 
-        if ($product->soldout) {
-            return response()->json(['err' => 1, 'msg' => 'product-soldout']);
+        if ($prepare->soldout) {
+            return response()->json(['err' => 1, 'msg' => 'prepare-soldout']);
         }
 
         return response()->json([
             'err' => 0,
             'msg' => '',
-            'data' => [$product]
+            'data' => [$prepare]
         ]);
     }
 
     public function store(Request $request) {
         return DB::transaction(function() use ($request) {
             // 1. Save or Update the Main Item
-            $product = Product::updateOrCreate(
+            $prepare = Prepare::updateOrCreate(
                 ['id' => $request->id],
                 $request->only(['name', 'category_id', 'price', 'soldout'])
             );
 
             // 2. Clear existing recipe
-            $product->ingredients()->delete();
+            $prepare->ingredients()->delete();
 
             // 3. Insert new recipe rows
             if ($request->has('recipe')) {
                 foreach ($request->recipe as $ingr) {
                     if ($ingr['ingredient_id'] && $ingr['qty'] > 0) {
-                        $product->ingredients()->create([
+                        $prepare->ingredients()->create([
                             'ingredient_code' => $ingr['ingredient_id'],
                             'quantity' => $ingr['qty'],
                             'unit' => $ingr['unit']
@@ -73,24 +73,24 @@ class ProductController
                 }
             }
 
-            return response()->json(['status' => 'success', 'data' => $product]);
+            return response()->json(['status' => 'success', 'data' => $prepare]);
         });
     }
 
     public function destroy($id)
     {
-        $product = Product::findOrFail($id);
-        if ($product) {
-            $product->update(['category_id' => null]); // Legacy "remove" just unsets category
-            return response()->json(['err' => 0, 'msg' => 'Product removed']);
+        $prepare = Prepare::findOrFail($id);
+        if ($prepare) {
+            $prepare->update(['category_id' => null]); // Legacy "remove" just unsets category
+            return response()->json(['err' => 0, 'msg' => 'Prepare removed']);
         }
-        return response()->json(['err' => 1, 'msg' => 'Product not found']);
+        return response()->json(['err' => 1, 'msg' => 'Prepare not found']);
     }
 
-    public function getRecipe($productCode)
+    public function getRecipe($prepareCode)
     {
-        $recipes = Recipe::with('ingredient')
-            ->where('product_id', $productCode)
+        $recipes = PrepareRecipe::with('ingredient')
+            ->where('prepare_id', $prepareCode)
             ->get();
 
         return response()->json([

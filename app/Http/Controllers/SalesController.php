@@ -26,6 +26,13 @@ class SalesController
         ]);
     }
 
+    public function getActiveCaptainOrder($salesId) {
+        return SaleRecord::where('sales_id', $salesId)
+            ->where('item_status', 'O')
+            ->with('product')
+            ->get();
+    }
+
     /**
      * Store a newly created resource in storage.
      */
