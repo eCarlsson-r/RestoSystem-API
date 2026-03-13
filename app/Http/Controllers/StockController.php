@@ -138,4 +138,66 @@ class StockController
             return response()->json(['err' => 0, 'msg' => 'Stock received successfully']);
         });
     }
+
+    public function getStockCard(Request $request) 
+    {
+        $itemType = $request->input('item_type');
+        $itemCode = $request->input('item_code');
+        $startDate = $request->input('start');
+        $endDate = $request->input('end');
+
+        $stockId = Stock::where([
+            'item_type' => $itemType,
+            'item_code' => $itemCode,
+        ])->first()->id;
+
+        // 1. Calculate the 'Beginning Balance' (Opening Balance)
+        // Sum of all (IN - OUT) before the start date
+        $openingBalance = StockLog::where('stock_id', $stockId)
+            ->where('created_at', '<', $startDate)
+            ->selectRaw('SUM(add_qty - get_qty) as balance')
+            ->first()->balance ?? 0;
+
+        // 2. Fetch the logs for the requested period
+        $logs = StockLog::where('stock_id', $stockId)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        // 3. Compute running balance
+        $runningBalance = $openingBalance;
+        $reportData = $logs->map(function ($log) use (&$runningBalance) {
+            $runningBalance += ($log->add_qty - $log->get_qty);
+            
+            return [
+                'date' => $log->created_at->format('Y-m-d H:i'),
+                'reference' => $log->reference,
+                'description' => $log->description,
+                'in' => $log->add_qty,
+                'out' => $log->get_qty,
+                'balance' => $runningBalance,
+            ];
+        });
+
+        return response()->json([
+            'opening_balance' => $openingBalance,
+            'closing_balance' => $runningBalance,
+            'data' => $reportData
+        ]);
+    }
+
+    public function transfers()
+    {
+        $transfers = StockMovement::with([
+            'from_branch',
+            'to_branch',
+            'records'
+        ])->get();
+
+        return response()->json([
+            'err' => 0,
+            'msg' => '',
+            'data' => $transfers
+        ]);
+    }
 }

@@ -11,11 +11,11 @@ class ProductController
 {
     public function index(Request $request)
     {
-        $query = Product::with(['category'])->where('category_id', $request->category)->where('soldout', 0);
+        $query = Product::with(['category'])->where('soldout', 0);
         
-        /*if ($request->has('branch')) {
-            $query->where('soldout', 0); // Simplified branch logic for now
-        }*/
+        if ($request->has('category')) {
+            $query->where('category_id', $request->category);
+        }
 
         if ($request->has('q')) {
             $query->where('name', 'like', '%' . $request->q . '%');
