@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('purchase_return_id')->constrained('purchase_returns')->onDelete('cascade');
             $table->string('item_type', 4);
             $table->string('item_code', 10);
-            $table->integer('qty');
+            $table->integer('quantity');
             $table->integer('price');
             $table->tinyInteger('discount')->default(0);
             $table->timestamps();

@@ -11,12 +11,12 @@ return new class extends Migration
         Schema::create('sale_invoices', function (Blueprint $table) {
             $table->id();
             $table->foreignId('sale_id')->constrained('sales')->onDelete('cascade');
-            $table->string('paymethod', 2)->nullable();
-            $table->string('paybank', 50)->nullable();
-            $table->string('paycard', 20)->nullable();
-            $table->integer('payamount');
-            $table->integer('paychange')->default(0);
-            $table->string('cardtype', 10)->nullable();
+            $table->string('pay_method', 2)->nullable();
+            $table->string('pay_bank', 50)->nullable();
+            $table->string('pay_card', 20)->nullable();
+            $table->integer('pay_amount');
+            $table->integer('pay_change')->default(0);
+            $table->string('card_type', 10)->nullable();
             $table->string('voucher', 10)->nullable();
             $table->foreignId('employee_id')->constrained('users');
             $table->timestamps();

@@ -12,10 +12,9 @@ class VoucherController
         return response()->json(['err' => 0, 'data' => Voucher::all()]);
     }
 
-    public function check(Request $request)
+    public function show($id)
     {
-        $vcode = $request->input('voucher-code');
-        $voucher = Voucher::where('code', $vcode)->first();
+        $voucher = Voucher::where('code', $id)->first();
 
         if (!$voucher) {
             return response()->json(['err' => 1, 'msg' => 'Voucher code is not valid.']);

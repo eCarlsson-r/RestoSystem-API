@@ -15,12 +15,13 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\PurchasingController;
 use App\Http\Controllers\VoucherController;
 use App\Http\Controllers\PackageController;
+use App\Http\Controllers\IngredientController;
 use App\Http\Controllers\UtilityController;
 use App\Http\Controllers\BuffetController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\StockController;
-use App\Http\Controllers\IngredientController;
+use App\Http\Controllers\PrepareController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login']);
@@ -77,13 +78,17 @@ Route::prefix('customers')->group(function () {
 });
 
 Route::prefix('purchasing')->group(function () {
+    Route::get('/orders', [PurchasingController::class, 'purchases']);
+    Route::get('/order/{id}', [PurchasingController::class, 'purchase']);
     Route::post('/order', [PurchasingController::class, 'storeOrder']);
     Route::post('/receive', [PurchasingController::class, 'receiveOrder']);
+    Route::get('/returns', [PurchasingController::class, 'returns']);
+    Route::get('/returns/{id}', [PurchasingController::class, 'return']);
 });
 
 Route::prefix('vouchers')->group(function () {
     Route::get('/', [VoucherController::class, 'index']);
-    Route::post('/check', [VoucherController::class, 'check']);
+    Route::get('/{id}', [VoucherController::class, 'show']);
     Route::post('/', [VoucherController::class, 'store']);
 });
 
@@ -142,6 +147,11 @@ Route::prefix('stock')->group(function () {
     Route::get('/transfers', [StockController::class, 'transfers']);
     Route::post('/move', [StockController::class, 'move']);
     Route::post('/receive/{id}', [StockController::class, 'receive']);
+    Route::get('/card', [StockController::class, 'getStockCard']);
+    Route::get('/requests', [StockController::class, 'kitchenRequest']);
+    Route::post('/request/approve', [StockController::class, 'approveRequest']);
+    Route::post('/request/reject', [StockController::class, 'rejectRequest']);
+    Route::get('/mutation', [StockController::class, 'getStockMutation']);
 });
 
 Route::prefix('ingredients')->group(function () {
@@ -150,10 +160,14 @@ Route::prefix('ingredients')->group(function () {
     Route::delete('/{code}', [IngredientController::class, 'destroy']);
 });
 
+Route::prefix('utilities')->group(function () {
+    Route::get('/', [UtilityController::class, 'index']);
+    Route::post('/', [UtilityController::class, 'store']);
+    Route::delete('/{code}', [UtilityController::class, 'destroy']);
+});
+
 Route::prefix('kitchen')->group(function () {
     Route::get('/tickets', [KitchenController::class, 'getTickets']);
 });
 
 Route::get('/dashboard', [DashboardController::class, 'index']);
-
-Route::get('reports/stock-card', [StockController::class, 'getStockCard']);

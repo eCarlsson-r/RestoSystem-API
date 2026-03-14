@@ -24,6 +24,17 @@ class DatabaseSeeder extends Seeder
             ProductSeeder::class,
             TableSeeder::class,
             SaleSeeder::class,
+            SaleInvoiceSeeder::class,
+            SupplierSeeder::class,
+            IngredientSeeder::class,
+            UtilitySeeder::class,
+            PackageSeeder::class,
+            PrepareSeeder::class,
+            RecipeSeeder::class,
+            StockSeeder::class,
+            PurchaseSeeder::class,
+            MovementSeeder::class,
+            KitchenSeeder::class,
         ]);
     }
 }

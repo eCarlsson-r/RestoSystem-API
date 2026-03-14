@@ -8,7 +8,7 @@ class PurchaseOrderRecord extends Model
 {
     protected $fillable = [
         'purchase_order_id', 'item_type', 'item_code', 
-        'qty', 'price', 'discount'
+        'quantity', 'price', 'discount'
     ];
 
     public function purchaseOrder()

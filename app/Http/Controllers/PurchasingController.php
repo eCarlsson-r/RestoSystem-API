@@ -13,6 +13,22 @@ use Illuminate\Support\Facades\DB;
 
 class PurchasingController
 {
+    public function purchases() {
+        return PurchaseOrder::all();
+    }
+
+    public function purchase($id) {
+        return PurchaseOrder::findOrFail($id);
+    }
+
+    public function returns() {
+        return PurchaseReturn::all();
+    }
+
+    public function return($id) {
+        return PurchaseReturn::findOrFail($id);
+    }
+
     public function storeOrder(Request $request)
     {
         return DB::transaction(function () use ($request) {

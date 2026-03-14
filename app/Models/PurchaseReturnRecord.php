@@ -8,7 +8,7 @@ class PurchaseReturnRecord extends Model
 {
     protected $fillable = [
         'purchase_return_id', 'item_type', 'item_code', 
-        'qty', 'price', 'discount'
+        'quantity', 'price', 'discount'
     ];
 
     public function purchaseReturn()

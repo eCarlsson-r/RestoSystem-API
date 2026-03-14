@@ -4,22 +4,39 @@ namespace App\Http\Controllers;
 
 use App\Models\Utility;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class UtilityController
 {
-    public function getCities()
+    public function index()
     {
-        // Legacy logic: select distinct city from state table
-        $cities = DB::table('utilities')->distinct()->pluck('city');
-        return response()->json(['err' => 0, 'data' => $cities]);
+        return response()->json([
+            'err' => 0,
+            'msg' => '',
+            'data' => Utility::all()
+        ]);
     }
 
-    public function getStates(Request $request)
+    public function store(Request $request)
     {
-        $states = DB::table('utilities')
-            ->where('city', $request->city)
-            ->pluck('state');
-        return response()->json(['err' => 0, 'data' => $states]);
+        $utility = Utility::updateOrCreate(
+            ['id' => $request->input('id')],
+            [
+                'name' => $request->input('name'),
+                'description' => $request->input('description'),
+                'unit' => $request->input('unit')
+            ]
+        );
+
+        return response()->json([
+            'err' => 0,
+            'msg' => 'Utility saved',
+            'data' => $utility
+        ]);
+    }
+
+    public function destroy($id)
+    {
+        Utility::findOrFail($id)->delete();
+        return response()->json(['err' => 0, 'msg' => 'Utility removed']);
     }
 }

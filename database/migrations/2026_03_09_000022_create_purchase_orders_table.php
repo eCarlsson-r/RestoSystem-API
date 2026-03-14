@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('supplier_id')->constrained('suppliers')->onDelete('cascade');
             $table->date('date');
             $table->date('delivery_date')->nullable();
-            $table->string('desc', 250)->nullable();
+            $table->string('description', 250)->nullable();
             $table->tinyInteger('tax')->default(0);
             $table->string('status', 1);
             $table->timestamps();

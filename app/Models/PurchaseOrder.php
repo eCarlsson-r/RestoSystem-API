@@ -8,7 +8,7 @@ class PurchaseOrder extends Model
 {
     protected $fillable = [
         'supplier_id', 'date', 'delivery_date', 
-        'desc', 'tax', 'status'
+        'description', 'tax', 'status'
     ];
 
     public function records()

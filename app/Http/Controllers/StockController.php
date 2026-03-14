@@ -6,6 +6,8 @@ use App\Models\Stock;
 use App\Models\StockLog;
 use App\Models\StockMovement;
 use App\Models\StockMovementRecord;
+use App\Models\KitchenRequest;
+use App\Models\KitchenRequestItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -24,6 +26,56 @@ class StockController
             'err' => 0,
             'msg' => '',
             'data' => $stocks
+        ]);
+    }
+    
+    public function getStockMutation(Request $request) {
+        $branch = $request->branch_code;
+        $storage = $request->storage_code;
+        $start = $request->start_date;
+        $end = $request->end_date . ' 23:59:59';
+
+        // 1. Get all stock items for this branch/storage
+        $stocks = Stock::where('branch_id', $branch)
+            ->where('storage', $storage)
+            ->with(['ingredient', 'utility']) // Eager load names
+            ->get();
+
+        $report = $stocks->map(function($stock) use ($start, $end) {
+            // 2. Opening Balance: Sum of logs BEFORE start date
+            $opening = StockLog::where('stock_id', $stock->id)
+                ->where('created_at', '<', $start)
+                ->selectRaw('SUM(add_qty - get_qty) as balance')
+                ->value('balance') ?? 0;
+
+            // 3. Activity during period
+            $activity = StockLog::where('stock_id', $stock->id)
+                ->whereBetween('created_at', [$start, $end])
+                ->selectRaw('SUM(add_qty) as qty_in, SUM(get_qty) as qty_out')
+                ->first();
+
+            $in = $activity->qty_in ?? 0;
+            $out = $activity->qty_out ?? 0;
+
+            return [
+                'item_code' => $stock->item_code,
+                'item_name' => $stock->item_type === 'INGR' 
+                            ? $stock->ingredient->name 
+                            : $stock->utility->name,
+                'opening' => (float)$opening,
+                'qty_in'  => (float)$in,
+                'qty_out' => (float)$out,
+                'closing' => (float)($opening + $in - $out),
+                'unit'    => $stock->item_type === 'INGR' 
+                            ? $stock->ingredient->unit 
+                            : 'pcs'
+            ];
+        });
+
+        return response()->json([
+            'err' => 0,
+            'msg' => '',
+            'data' => $report
         ]);
     }
 
@@ -186,6 +238,16 @@ class StockController
         ]);
     }
 
+    public function kitchenRequest(Request $request)
+    {
+        $request = KitchenRequest::with('from_branch', 'to_branch')->get();
+        return response()->json([
+            'err' => 0,
+            'msg' => '',
+            'data' => $request
+        ]);
+    }
+
     public function transfers()
     {
         $transfers = StockMovement::with([
@@ -198,6 +260,37 @@ class StockController
             'err' => 0,
             'msg' => '',
             'data' => $transfers
+        ]);
+    }
+
+    // Laravel Logic for Variance Report
+    public function getVariance(Request $request) {
+        $stock = Stock::where('item_type', $request->item_type)
+            ->where('item_code', $request->item_code)
+            ->where('branch_id', $request->branch_id)
+            ->where('storage', $request->storage)->latest();
+
+        if (!$stock) {
+            return response()->json([
+                'err' => 1,
+                'msg' => 'Stock not found',
+                'data' => null
+            ]);
+        }
+
+        $expected = StockLog::where('stock_id', $stock->id)->sum('qty_change');
+        $actual = $stock->first()->qty;
+        
+        return response()->json([
+            'err' => 0,
+            'msg' => '',
+            'data' => [
+                'item' => $stock->item_code,
+                'expected' => $expected,
+                'actual' => $actual,
+                'loss' => $expected - $actual,
+                'loss_value' => ($expected - $actual) * $stock->purchase_price
+            ]
         ]);
     }
 }

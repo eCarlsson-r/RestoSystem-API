@@ -8,7 +8,7 @@ class PurchaseReturn extends Model
 {
     protected $fillable = [
         'supplier_id', 'date', 'delivery_date', 
-        'desc', 'tax'
+        'description', 'tax'
     ];
 
     public function records()

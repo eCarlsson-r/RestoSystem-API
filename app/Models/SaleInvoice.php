@@ -9,9 +9,9 @@ class SaleInvoice extends Model
     protected $table = 'sale_invoices';
 
     protected $fillable = [
-        'sale_id', 'paymethod', 'paybank', 
-        'paycard', 'payamount', 'paychange', 
-        'cardtype', 'voucher', 'employee_id'
+        'sale_id', 'pay_method', 'pay_bank', 
+        'pay_card', 'pay_amount', 'pay_change', 
+        'card_type', 'voucher', 'employee_id'
     ];
 
     public function sale()
