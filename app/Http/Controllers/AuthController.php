@@ -38,11 +38,32 @@ class AuthController
 
         // Format response to match legacy expectation if needed, or return standard Laravel response
         $data = $user->toArray();
+        $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
             'err' => 0,
             'msg' => 'Login successful',
-            'data' => [$data]
+            'data' => [$data],
+            'token' => $token
+        ]);
+    }
+
+    public function userProfile(Request $request)
+    {
+        return response()->json([
+            'err' => 0,
+            'msg' => '',
+            'data' => $request->user()
+        ]);
+    }
+
+    public function logout(Request $request)
+    {
+        $request->user()->currentAccessToken()->delete();
+        return response()->json([
+            'err' => 0,
+            'msg' => 'Logout successful',
+            'data' => []
         ]);
     }
 }

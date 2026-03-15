@@ -4,17 +4,13 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\SaleRecord;
+use App\Models\Sale;
 
 class KitchenController
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-        //
-    }
-    
     public function getTickets(Request $request) {
         $station = $request->station; // e.g., 'KTCN'
 
@@ -31,11 +27,15 @@ class KitchenController
                     'sales_id' => $header->{'id'},
                     'table_number' => $header->table->{'table_number'},
                     'floor_number' => $header->table->{'floor_number'},
+                    'customer_name' => $header->customer->{'name'},
+                    'created_at' => $header->created_at,
+                    'status' => $header->status,
                     'time_elapsed' => round(now()->diffInMinutes($items->first()->{'order_time'})),
                     'items' => $items->map(fn($i) => [
                         'id' => $i->{'id'},
                         'name' => $i->product->{'name'},
-                        'qty' => 1, // Based on your schema, each row is an item
+                        'quantity' => $i->{'quantity'} ?? 1,
+                        'item_status' => $i->{'item_status'},
                         'note' => $i->{'item_note'}
                     ])
                 ];
@@ -67,9 +67,17 @@ class KitchenController
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function updateStatus(Request $request, string $id)
     {
-        //
+        $sale = Sale::findOrFail($id);
+        $sale->status = $request->status;
+        $sale->save();
+
+        return response()->json([
+            'err' => 0,
+            'msg' => '',
+            'data' => $sale
+        ]);
     }
 
     /**

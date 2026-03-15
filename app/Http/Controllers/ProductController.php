@@ -11,7 +11,11 @@ class ProductController
 {
     public function index(Request $request)
     {
-        $query = Product::with(['category'])->where('soldout', 0);
+        $query = Product::with(['category']);
+        
+        if (!$request->has('all')) {
+            $query->where('soldout', 0);
+        }
         
         if ($request->has('category')) {
             $query->where('category_id', $request->category);
@@ -27,6 +31,19 @@ class ProductController
             'err' => 0,
             'msg' => '',
             'data' => $products
+        ]);
+    }
+
+    public function toggleSoldOut(Request $request, $id)
+    {
+        $product = Product::findOrFail($id);
+        $product->soldout = $request->soldout;
+        $product->save();
+
+        return response()->json([
+            'err' => 0,
+            'msg' => 'Product status updated',
+            'data' => $product
         ]);
     }
 

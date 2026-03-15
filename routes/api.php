@@ -26,6 +26,13 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login']);
 
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/user-profile', [AuthController::class, 'userProfile']);
+});
+
+Route::get('/dashboard', [DashboardController::class, 'index']);
+
 Route::prefix('tables')->group(function () {
     Route::get('/', [TableController::class, 'index']);
     Route::get('/floor', [TableController::class, 'floorIndex']);
@@ -125,6 +132,7 @@ Route::prefix('products')->group(function () {
     Route::post('/', [ProductController::class, 'store']);
     Route::delete('/{id}', [ProductController::class, 'destroy']);
     Route::get('/{id}/recipe', [ProductController::class, 'getRecipe']);
+    Route::post('/{id}/soldout', [ProductController::class, 'toggleSoldOut']);
 });
 
 Route::prefix('prepare')->group(function () {
@@ -168,6 +176,5 @@ Route::prefix('utilities')->group(function () {
 
 Route::prefix('kitchen')->group(function () {
     Route::get('/tickets', [KitchenController::class, 'getTickets']);
+    Route::post('/order/{id}/status', [KitchenController::class, 'updateStatus']);
 });
-
-Route::get('/dashboard', [DashboardController::class, 'index']);

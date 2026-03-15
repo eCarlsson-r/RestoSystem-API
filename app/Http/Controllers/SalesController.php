@@ -32,6 +32,29 @@ class SalesController
             ->with('product')
             ->get();
     }
+    
+    public function getCancellationReport(Request $request) {
+        $start = $request->start_date;
+        $end = $request->end_date . ' 23:59:59';
+
+        $voids = Sale::where('branch_id', $request->branch_id)
+            ->whereBetween('date', [$start, $end])
+            ->whereIn('status', ['X'])
+            ->with(['employee', 'records'])
+            ->get();
+
+        return $voids->map(function($sale) {
+            return [
+                'invoice' => $sale->sales_invoice,
+                'time' => $sale->created_at->format('H:i'),
+                'waiter' => $sale->employee->name,
+                'authorized_by' => $sale->supervisor->name ?? 'N/A',
+                'reason' => $sale->cancel_reason,
+                'total_lost' => (float)$sale->total_final,
+                'items' => $sale->records->map(fn($r) => $r->product_name)->join(', ')
+            ];
+        });
+    }
 
     /**
      * Store a newly created resource in storage.
@@ -100,7 +123,7 @@ class SalesController
     
     public function checkout(Request $request) {
         $salesId = $request["sales-id"];
-        $invoiceEmployee = $request["invoice_employee"];
+        $invoiceEmployee = $request->user()->id;
         $salesTotal = (float)$request["payment-total"];
         $paymentTendered = isset($request["payment-cash"]) ? (float)$request["payment-cash"] : null;
         $cardEdc = $request["card-edc"] ?? null;
