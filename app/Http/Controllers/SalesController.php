@@ -69,7 +69,7 @@ class SalesController
                 $sale = Sale::create([
                     'branch_id' => $branch,
                     'table_id' => $request->input('table_id'),
-                    'employee_id' => $request->user()->id,
+                    'employee_id' => $request->user()->employee->id ?? $request->user()->id,
                     'customer_id' => $request->input('customer_id', 1),
                     'date' => now()->toDateString(),
                     'time' => now()->toTimeString(),
@@ -122,14 +122,15 @@ class SalesController
     }
     
     public function checkout(Request $request) {
-        $salesId = $request["sales-id"];
-        $invoiceEmployee = $request->user()->id;
-        $salesTotal = (float)$request["payment-total"];
-        $paymentTendered = isset($request["payment-cash"]) ? (float)$request["payment-cash"] : null;
-        $cardEdc = $request["card-edc"] ?? null;
-        $cardType = $request["card-type"] ?? null;
-        $cardNumber = $request["no-kartu"] ?? null;
-        $qrEdc = $request["qr-edc"] ?? null;
+        $salesId = $request["sales_id"];
+        $invoiceEmployee = $request->user()->employee->id ?? $request->user()->id;
+        $paymentMethod = $request["payment_method"];
+        $salesTotal = (float)$request["total"];
+        $paymentTendered = isset($request["payment_cash"]) ? (float)$request["payment_cash"] : null;
+        $cardEdc = $request["card_edc"] ?? null;
+        $cardType = $request["card_type"] ?? null;
+        $cardNumber = $request["card_number"] ?? null;
+        $qrEdc = $request["qr_edc"] ?? null;
 
         return DB::transaction(function() use ($salesId, $invoiceEmployee, $salesTotal, $paymentTendered, $cardEdc, $cardType, $cardNumber, $qrEdc) {
             $sale = Sale::findOrFail($salesId);
@@ -138,24 +139,21 @@ class SalesController
             if (isset($cardEdc) && isset($cardNumber) && isset($cardType)) {
                 SaleInvoice::create([
                     'sale_id' => $salesId,
-                    'cardtype' => $cardType,
-                    'paycard' => $cardNumber,
-                    'paybank' => $cardEdc,
-                    'payamount' => $salesTotal,
+                    'card_type' => $cardType,
+                    'pay_card' => $cardNumber,
+                    'pay_bank' => $cardEdc,
+                    'pay_amount' => $salesTotal,
                     'employee_id' => $invoiceEmployee
                 ]);
-            } else if (isset($paymentTendered) && ($paymentTendered > 0 || ($paymentTendered == 0 && $salesTotal == 0))) {
+            }
+            
+            if (isset($paymentTendered) && ($paymentTendered > 0 || ($paymentTendered == 0 && $salesTotal == 0))) {
                 $paymentChange = $paymentTendered - $salesTotal;
                 SaleInvoice::create([
                     'sale_id' => $salesId,
-                    'payamount' => $paymentTendered,
-                    'paychange' => $paymentChange,
+                    'pay_amount' => $paymentTendered,
+                    'pay_change' => $paymentChange,
                     'employee_id' => $invoiceEmployee
-                ]);
-            } else {
-                return response()->json([
-                    'err' => 1,
-                    'msg' => "Payment not made due to missing details."
                 ]);
             }
 
@@ -171,26 +169,26 @@ class SalesController
                 ]);
 
             // 4. Release Table if no other unpaid orders
-            $tableNumber = $sale->table_number;
-            $floorNumber = $sale->floor_number;
+            $tableId = $sale->table_id;
             $salesBranch = $sale->branch_id;
 
             // The legacy logic checks for other sales on the same table that don't have an invoice yet
-            $checkTableOrder = Sale::where('table_number', $tableNumber)
-                ->where('floor_number', $floorNumber)
+            $checkTableOrder = Sale::where('table_id', $tableId)
                 ->where('branch_id', $salesBranch)
                 ->where('status', '<>', 'X')
                 ->whereDoesntHave('invoice')
                 ->count();
 
             if ($checkTableOrder == 0) {
-                Table::where('number', $tableNumber)
-                    ->update(['status' => 'available', 'table_status' => 'V']);
+                // Release the table
+                Table::findOrFail($tableId)
+                    ->update(['status' => 'available']);
             }
 
             return response()->json([
                 'err' => 0, 
                 'msg' => 'Success',
+                'data' => $sale->with('branch', 'employee', 'customer', 'records.product', 'records.package')->get(),
                 'unpaid-order' => $checkTableOrder
             ]);
         });

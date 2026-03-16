@@ -29,152 +29,151 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user-profile', [AuthController::class, 'userProfile']);
-});
+    Route::get('/dashboard', [DashboardController::class, 'index']);
 
-Route::get('/dashboard', [DashboardController::class, 'index']);
+    Route::prefix('tables')->group(function () {
+        Route::get('/', [TableController::class, 'index']);
+        Route::get('/floor', [TableController::class, 'floorIndex']);
+        Route::post('/', [TableController::class, 'store']);
+        Route::post('/use', [TableController::class, 'useTable']);
+        Route::post('/release', [TableController::class, 'releaseTable']);
+        Route::post('/shift', [TableController::class, 'shiftTable']);
+        Route::post('/merge', [TableController::class, 'mergeTable']);
+        Route::post('/split', [TableController::class, 'splitTable']);
+        Route::delete('/', [TableController::class, 'destroy']);
+    });
 
-Route::prefix('tables')->group(function () {
-    Route::get('/', [TableController::class, 'index']);
-    Route::get('/floor', [TableController::class, 'floorIndex']);
-    Route::post('/', [TableController::class, 'store']);
-    Route::post('/use', [TableController::class, 'useTable']);
-    Route::post('/release', [TableController::class, 'releaseTable']);
-    Route::post('/shift', [TableController::class, 'shiftTable']);
-    Route::post('/merge', [TableController::class, 'mergeTable']);
-    Route::delete('/', [TableController::class, 'destroy']);
-});
+    Route::prefix('branches')->group(function () {
+        Route::get('/', [BranchController::class, 'index']);
+        Route::post('/', [BranchController::class, 'store']);
+        Route::delete('/{id}', [BranchController::class, 'destroy']);
+    });
 
-Route::prefix('branches')->group(function () {
-    Route::get('/', [BranchController::class, 'index']);
-    Route::post('/', [BranchController::class, 'store']);
-    Route::delete('/{id}', [BranchController::class, 'destroy']);
-});
+    Route::prefix('rooms')->group(function () {
+        Route::get('/', [RoomController::class, 'index']);
+        Route::post('/', [RoomController::class, 'store']);
+        Route::delete('/{id}', [RoomController::class, 'destroy']);
+    });
 
-Route::prefix('rooms')->group(function () {
-    Route::get('/', [RoomController::class, 'index']);
-    Route::post('/', [RoomController::class, 'store']);
-    Route::delete('/{id}', [RoomController::class, 'destroy']);
-});
+    Route::prefix('sales')->group(function () {
+        Route::get('/', [SalesController::class, 'index']);
+        Route::get('/{id}', [SalesController::class, 'show']);
+        Route::post('/', [SalesController::class, 'store']);
+        Route::post('/checkout', [SalesController::class, 'checkout']);
+        Route::post('/split', [SalesController::class, 'splitSales']);
+        Route::post('/merge', [SalesController::class, 'mergeSales']);
+        Route::post('/move', [SalesController::class, 'moveTable']);
+        Route::get('/orders/{salesId}', [SalesController::class, 'getActiveCaptainOrder']);
+        Route::get('/get-table-sale', [SalesController::class, 'getTableSale']);
+    });
 
-Route::prefix('sales')->group(function () {
-    Route::get('/', [SalesController::class, 'index']);
-    Route::get('/{id}', [SalesController::class, 'show']);
-    Route::post('/', [SalesController::class, 'store']);
-    Route::post('/checkout', [SalesController::class, 'checkout']);
-    Route::post('/split', [SalesController::class, 'splitSales']);
-    Route::post('/merge', [SalesController::class, 'mergeSales']);
-    Route::get('/orders/{salesId}', [SalesController::class, 'getActiveCaptainOrder']);
-});
+    Route::prefix('employees')->group(function () {
+        Route::get('/', [EmployeeController::class, 'index']);
+        Route::post('/', [EmployeeController::class, 'store']);
+        Route::delete('/{id}', [EmployeeController::class, 'destroy']);
+    });
 
-Route::prefix('employees')->group(function () {
-    Route::get('/', [EmployeeController::class, 'index']);
-    Route::post('/', [EmployeeController::class, 'store']);
-    Route::delete('/{id}', [EmployeeController::class, 'destroy']);
-});
+    Route::prefix('suppliers')->group(function () {
+        Route::get('/', [SupplierController::class, 'index']);
+        Route::post('/', [SupplierController::class, 'store']);
+        Route::delete('/{id}', [SupplierController::class, 'destroy']);
+    });
 
-Route::prefix('suppliers')->group(function () {
-    Route::get('/', [SupplierController::class, 'index']);
-    Route::post('/', [SupplierController::class, 'store']);
-    Route::delete('/{id}', [SupplierController::class, 'destroy']);
-});
+    Route::prefix('customers')->group(function () {
+        Route::get('/', [CustomerController::class, 'index']);
+        Route::post('/', [CustomerController::class, 'store']);
+        Route::delete('/{id}', [CustomerController::class, 'destroy']);
+    });
 
-Route::prefix('customers')->group(function () {
-    Route::get('/', [CustomerController::class, 'index']);
-    Route::post('/', [CustomerController::class, 'store']);
-    Route::delete('/{id}', [CustomerController::class, 'destroy']);
-});
+    Route::prefix('purchasing')->group(function () {
+        Route::get('/orders', [PurchasingController::class, 'purchases']);
+        Route::get('/order/{id}', [PurchasingController::class, 'purchase']);
+        Route::post('/order', [PurchasingController::class, 'storeOrder']);
+        Route::post('/receive', [PurchasingController::class, 'receiveOrder']);
+        Route::get('/returns', [PurchasingController::class, 'returns']);
+        Route::get('/returns/{id}', [PurchasingController::class, 'return']);
+    });
 
-Route::prefix('purchasing')->group(function () {
-    Route::get('/orders', [PurchasingController::class, 'purchases']);
-    Route::get('/order/{id}', [PurchasingController::class, 'purchase']);
-    Route::post('/order', [PurchasingController::class, 'storeOrder']);
-    Route::post('/receive', [PurchasingController::class, 'receiveOrder']);
-    Route::get('/returns', [PurchasingController::class, 'returns']);
-    Route::get('/returns/{id}', [PurchasingController::class, 'return']);
-});
+    Route::prefix('vouchers')->group(function () {
+        Route::get('/', [VoucherController::class, 'index']);
+        Route::get('/{id}', [VoucherController::class, 'show']);
+        Route::post('/', [VoucherController::class, 'store']);
+    });
 
-Route::prefix('vouchers')->group(function () {
-    Route::get('/', [VoucherController::class, 'index']);
-    Route::get('/{id}', [VoucherController::class, 'show']);
-    Route::post('/', [VoucherController::class, 'store']);
-});
+    Route::prefix('packages')->group(function () {
+        Route::get('/', [PackageController::class, 'index']);
+        Route::post('/', [PackageController::class, 'store']);
+        Route::delete('/{code}', [PackageController::class, 'destroy']);
+    });
 
-Route::prefix('packages')->group(function () {
-    Route::get('/', [PackageController::class, 'index']);
-    Route::post('/', [PackageController::class, 'store']);
-    Route::delete('/{code}', [PackageController::class, 'destroy']);
-});
+    Route::prefix('buffet')->group(function () {
+        Route::get('/packages', [BuffetController::class, 'index']);
+        Route::post('/package', [BuffetController::class, 'storePackage']);
+        Route::post('/order', [BuffetController::class, 'storeOrder']);
+    });
 
-Route::prefix('utilities')->group(function () {
-    Route::get('/cities', [UtilityController::class, 'getCities']);
-    Route::get('/states', [UtilityController::class, 'getStates']);
-});
+    Route::prefix('notifications')->group(function () {
+        Route::post('/subscribe', [NotificationController::class, 'subscribe']);
+        Route::post('/unsubscribe', [NotificationController::class, 'unsubscribe']);
+    });
 
-Route::prefix('buffet')->group(function () {
-    Route::get('/packages', [BuffetController::class, 'index']);
-    Route::post('/package', [BuffetController::class, 'storePackage']);
-    Route::post('/order', [BuffetController::class, 'storeOrder']);
-});
+    Route::prefix('files')->group(function () {
+        Route::get('/{fileid}', [FileController::class, 'show']);
+        Route::post('/upload', [FileController::class, 'store']);
+    });
 
-Route::prefix('notifications')->group(function () {
-    Route::post('/subscribe', [NotificationController::class, 'subscribe']);
-    Route::post('/unsubscribe', [NotificationController::class, 'unsubscribe']);
-});
+    Route::prefix('products')->group(function () {
+        Route::get('/', [ProductController::class, 'index']);
+        Route::get('/{id}', [ProductController::class, 'show']);
+        Route::post('/', [ProductController::class, 'store']);
+        Route::delete('/{id}', [ProductController::class, 'destroy']);
+        Route::get('/{id}/recipe', [ProductController::class, 'getRecipe']);
+        Route::post('/{id}/soldout', [ProductController::class, 'toggleSoldOut']);
+    });
 
-Route::prefix('files')->group(function () {
-    Route::get('/{fileid}', [FileController::class, 'show']);
-    Route::post('/upload', [FileController::class, 'store']);
-});
+    Route::prefix('prepare')->group(function () {
+        Route::get('/', [PrepareController::class, 'index']);
+        Route::get('/{id}', [PrepareController::class, 'show']);
+        Route::post('/', [PrepareController::class, 'store']);
+        Route::delete('/{id}', [PrepareController::class, 'destroy']);
+        Route::get('/{id}/recipe', [PrepareController::class, 'getRecipe']);
+    });
 
-Route::prefix('products')->group(function () {
-    Route::get('/', [ProductController::class, 'index']);
-    Route::get('/{id}', [ProductController::class, 'show']);
-    Route::post('/', [ProductController::class, 'store']);
-    Route::delete('/{id}', [ProductController::class, 'destroy']);
-    Route::get('/{id}/recipe', [ProductController::class, 'getRecipe']);
-    Route::post('/{id}/soldout', [ProductController::class, 'toggleSoldOut']);
-});
+    Route::prefix('categories')->group(function () {
+        Route::get('/', [CategoryController::class, 'index']);
+        Route::post('/', [CategoryController::class, 'store']);
+        Route::delete('/{id}', [CategoryController::class, 'destroy']);
+    });
 
-Route::prefix('prepare')->group(function () {
-    Route::get('/', [PrepareController::class, 'index']);
-    Route::get('/{id}', [PrepareController::class, 'show']);
-    Route::post('/', [PrepareController::class, 'store']);
-    Route::delete('/{id}', [PrepareController::class, 'destroy']);
-    Route::get('/{id}/recipe', [PrepareController::class, 'getRecipe']);
-});
+    Route::prefix('stock')->group(function () {
+        Route::get('/', [StockController::class, 'index']);
+        Route::post('/', [StockController::class, 'store']);
+        Route::get('/transfers', [StockController::class, 'transfers']);
+        Route::post('/move', [StockController::class, 'move']);
+        Route::post('/receive/{id}', [StockController::class, 'receive']);
+        Route::get('/card', [StockController::class, 'getStockCard']);
+        Route::get('/requests', [StockController::class, 'kitchenRequest']);
+        Route::post('/request/approve', [StockController::class, 'approveRequest']);
+        Route::post('/request/reject', [StockController::class, 'rejectRequest']);
+        Route::get('/mutation', [StockController::class, 'getStockMutation']);
+    });
 
-Route::prefix('categories')->group(function () {
-    Route::get('/', [CategoryController::class, 'index']);
-    Route::post('/', [CategoryController::class, 'store']);
-    Route::delete('/{id}', [CategoryController::class, 'destroy']);
-});
+    Route::prefix('ingredients')->group(function () {
+        Route::get('/', [IngredientController::class, 'index']);
+        Route::post('/', [IngredientController::class, 'store']);
+        Route::delete('/{code}', [IngredientController::class, 'destroy']);
+    });
 
-Route::prefix('stock')->group(function () {
-    Route::get('/', [StockController::class, 'index']);
-    Route::post('/', [StockController::class, 'store']);
-    Route::get('/transfers', [StockController::class, 'transfers']);
-    Route::post('/move', [StockController::class, 'move']);
-    Route::post('/receive/{id}', [StockController::class, 'receive']);
-    Route::get('/card', [StockController::class, 'getStockCard']);
-    Route::get('/requests', [StockController::class, 'kitchenRequest']);
-    Route::post('/request/approve', [StockController::class, 'approveRequest']);
-    Route::post('/request/reject', [StockController::class, 'rejectRequest']);
-    Route::get('/mutation', [StockController::class, 'getStockMutation']);
-});
+    Route::prefix('utilities')->group(function () {
+        Route::get('/', [UtilityController::class, 'index']);
+        Route::post('/', [UtilityController::class, 'store']);
+        Route::delete('/{code}', [UtilityController::class, 'destroy']);
+        Route::get('/cities', [UtilityController::class, 'getCities']);
+        Route::get('/states', [UtilityController::class, 'getStates']);
+    });
 
-Route::prefix('ingredients')->group(function () {
-    Route::get('/', [IngredientController::class, 'index']);
-    Route::post('/', [IngredientController::class, 'store']);
-    Route::delete('/{code}', [IngredientController::class, 'destroy']);
-});
-
-Route::prefix('utilities')->group(function () {
-    Route::get('/', [UtilityController::class, 'index']);
-    Route::post('/', [UtilityController::class, 'store']);
-    Route::delete('/{code}', [UtilityController::class, 'destroy']);
-});
-
-Route::prefix('kitchen')->group(function () {
-    Route::get('/tickets', [KitchenController::class, 'getTickets']);
-    Route::post('/order/{id}/status', [KitchenController::class, 'updateStatus']);
+    Route::prefix('kitchen')->group(function () {
+        Route::get('/tickets', [KitchenController::class, 'getTickets']);
+        Route::post('/order/{id}/status', [KitchenController::class, 'updateStatus']);
+    });
 });

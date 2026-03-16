@@ -50,10 +50,12 @@ class AuthController
 
     public function userProfile(Request $request)
     {
+        $user = $request->user();
+        $employee = $user->employee;
         return response()->json([
             'err' => 0,
             'msg' => '',
-            'data' => $request->user()
+            'data' => compact('user', 'employee')
         ]);
     }
 

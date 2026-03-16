@@ -13,6 +13,7 @@ return new class extends Migration
             $table->foreignId('sale_id')->constrained('sales')->onDelete('cascade');
             $table->string('item_type', 50);
             $table->string('item_code', 10);
+            $table->integer('quantity');
             $table->integer('item_price');
             $table->tinyInteger('discount_pcnt')->default(0);
             $table->integer('discount_amnt')->default(0);
