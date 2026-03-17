@@ -11,12 +11,14 @@ return new class extends Migration
         Schema::create('prepare_recipes', function (Blueprint $table) {
             $table->id();
             $table->string('prepare_id', 5);
-            $table->string('ingredient_id', 5);
-            $table->integer('qty');
+            $table->string('item_type', 5);
+            $table->string('item_code', 10);
+            $table->integer('quantity');
+            $table->string('unit', 10);
             $table->integer('purchase_price');
             $table->timestamps();
 
-            $table->unique(['prepare_id', 'ingredient_id']);
+            $table->unique(['prepare_id', 'item_type', 'item_code']);
         });
     }
 

@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->string('name', 100);
             $table->integer('cost');
-            $table->integer('qty');
+            $table->integer('quantity');
             $table->string('unit', 10);
             $table->timestamps();
         });

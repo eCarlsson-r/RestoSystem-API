@@ -8,6 +8,11 @@ use App\Models\Sale;
 
 class KitchenController
 {
+    private $notificationService;
+
+    public function __construct(NotificationService $notificationService) {
+        $this->notificationService = $notificationService;
+    }
     /**
      * Display a listing of the resource.
      */
@@ -48,6 +53,33 @@ class KitchenController
         ]);
     }
 
+    public function getCaptainTicket($salesId)
+    {
+        return DB::transaction(function () use ($salesId) {
+            $order = Sale::with(['branch', 'table'])->findOrFail($salesId);
+
+            // Fetch items that haven't been printed yet
+            $newItems = $order->items()
+                ->whereNull('printed_at')
+                ->with(['product', 'package'])
+                ->get();
+
+            if ($newItems->isEmpty()) {
+                return response()->json(['message' => 'No new items to print'], 404);
+            }
+
+            // Mark them as printed immediately
+            $order->items()
+                ->whereNull('printed_at')
+                ->update(['printed_at' => now()]);
+
+            // Attach only the new items to the order object for the frontend
+            $order->setRelation('records', $newItems);
+
+            return response()->json(['data' => $order]);
+        });
+    }
+
     /**
      * Store a newly created resource in storage.
      */
@@ -72,6 +104,9 @@ class KitchenController
         $sale = Sale::findOrFail($id);
         $sale->status = $request->status;
         $sale->save();
+
+        // Broadcast to the Waiters
+        $this->notificationService->notifyOrderReady($sale);
 
         return response()->json([
             'err' => 0,

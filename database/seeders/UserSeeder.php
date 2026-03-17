@@ -40,27 +40,7 @@ class UserSeeder extends Seeder
                 'type' => 'CASHIER',
                 'created_at' => now(),
                 'updated_at' => now(),
-            ],
-            [
-                'id' => 4,
-                'name' => 'DMBRC Kitchen',
-                'email' => 'kitchen@demo.com',
-                'username' => 'DMBRC_KTCN',
-                'password' => Hash::make('Dk12345'),
-                'type' => 'KITCHEN',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'id' => 5,
-                'name' => 'DMBRC Bartender',
-                'email' => 'bartender@demo.com',
-                'username' => 'DMBRC_BART',
-                'password' => Hash::make('Db12345'),
-                'type' => 'KITCHEN',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
+            ]
         ]);
     }
 }

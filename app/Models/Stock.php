@@ -15,4 +15,14 @@ class Stock extends Model
     {
         return $this->hasMany(StockLog::class);
     }
+
+    public function ingredient()
+    {
+        return $this->belongsTo(Ingredient::class, 'item_code');
+    }
+
+    public function utility()
+    {
+        return $this->belongsTo(Utility::class, 'item_code');
+    }
 }

@@ -11,9 +11,9 @@ class Sale extends Model
         'date', 'time', 'discount', 'tax', 'status'
     ];
 
-    public function invoice()
+    public function invoices()
     {
-        return $this->hasOne(SaleInvoice::class, 'sale_id');
+        return $this->hasMany(SaleInvoice::class, 'sale_id');
     }
 
     public function branch()

@@ -16,7 +16,7 @@ class SalesController
      */
     public function index(Request $request)
     {
-        $sale = Sale::with('branch', 'employee', 'customer', 'records.product', 'records.package')->where('status', '<>', 'X');
+        $sale = Sale::with('branch', 'employee', 'customer', 'table', 'records.product', 'records.package')->where('status', '<>', 'X');
         if ($request->branch_id) $sale->where('branch_id', $request->branch_id); 
 
         return response()->json([
@@ -27,10 +27,7 @@ class SalesController
     }
 
     public function getActiveCaptainOrder($salesId) {
-        return SaleRecord::where('sales_id', $salesId)
-            ->where('item_status', 'O')
-            ->with('product')
-            ->get();
+        return Sale::find($salesId)->with('table', 'records.product', 'records.package')->get();
     }
     
     public function getCancellationReport(Request $request) {
@@ -88,7 +85,7 @@ class SalesController
             foreach ($request->items as $item) {
                 // Note: Each item in the loop is a single sales-record
                 SaleRecord::create([
-                    'sales_id' => $salesId,
+                    'sale_id' => $salesId,
                     'item_type' => $item['item_type'], // product or package
                     'item-code' => $item['item_code'],
                     'item_note' => $item['item_note'] ?? '',
@@ -108,7 +105,7 @@ class SalesController
 
             return response()->json([
                 'status' => 'success', 
-                'sales_id' => $salesId
+                'sale_id' => $salesId
             ]);
         });
     }
@@ -124,37 +121,41 @@ class SalesController
     public function checkout(Request $request) {
         $salesId = $request["sales_id"];
         $invoiceEmployee = $request->user()->employee->id ?? $request->user()->id;
-        $paymentMethod = $request["payment_method"];
-        $salesTotal = (float)$request["total"];
-        $paymentTendered = isset($request["payment_cash"]) ? (float)$request["payment_cash"] : null;
-        $cardEdc = $request["card_edc"] ?? null;
-        $cardType = $request["card_type"] ?? null;
-        $cardNumber = $request["card_number"] ?? null;
-        $qrEdc = $request["qr_edc"] ?? null;
+        $totalToPay = (float)$request["total"];
+        $payments = $request["payments"]; // Expecting array of payment objects
 
-        return DB::transaction(function() use ($salesId, $invoiceEmployee, $salesTotal, $paymentTendered, $cardEdc, $cardType, $cardNumber, $qrEdc) {
+        return DB::transaction(function() use ($salesId, $invoiceEmployee, $totalToPay, $payments) {
             $sale = Sale::findOrFail($salesId);
+            $totalPaid = 0;
 
-            // 1. Create Invoice
-            if (isset($cardEdc) && isset($cardNumber) && isset($cardType)) {
-                SaleInvoice::create([
+            foreach ($payments as $p) {
+                $method = $p['method'];
+                $amount = (float)$p['amount'];
+                
+                $invoiceData = [
                     'sale_id' => $salesId,
-                    'card_type' => $cardType,
-                    'pay_card' => $cardNumber,
-                    'pay_bank' => $cardEdc,
-                    'pay_amount' => $salesTotal,
-                    'employee_id' => $invoiceEmployee
-                ]);
-            }
-            
-            if (isset($paymentTendered) && ($paymentTendered > 0 || ($paymentTendered == 0 && $salesTotal == 0))) {
-                $paymentChange = $paymentTendered - $salesTotal;
-                SaleInvoice::create([
-                    'sale_id' => $salesId,
-                    'pay_amount' => $paymentTendered,
-                    'pay_change' => $paymentChange,
-                    'employee_id' => $invoiceEmployee
-                ]);
+                    'pay_method' => $method,
+                    'employee_id' => $invoiceEmployee,
+                    'pay_amount' => $amount,
+                ];
+
+                if ($method === 'CASH') {
+                    $tendered = (float)$p['tendered'];
+                    $invoiceData['pay_amount'] = $tendered;
+                    $invoiceData['pay_change'] = $tendered - $amount;
+                    $totalPaid += $amount;
+                } else if ($method === 'CARD' || $method === 'QRIS') {
+                    $invoiceData['card_type'] = $p['card_type'] ?? null;
+                    $invoiceData['pay_card'] = $p['card_number'] ?? null;
+                    $invoiceData['pay_bank'] = $p['pay_bank'] ?? null;
+                    $totalPaid += $amount;
+                } else if ($method === 'VOUCHER') {
+                    $invoiceData['voucher'] = $p['voucher_code'] ?? null;
+                    Voucher::where('code', $p['voucher_code'])->update(['status' => 'REDEEMED']);
+                    $totalPaid += $amount;
+                }
+
+                SaleInvoice::create($invoiceData);
             }
 
             // 2. Update Sale Status
@@ -172,23 +173,20 @@ class SalesController
             $tableId = $sale->table_id;
             $salesBranch = $sale->branch_id;
 
-            // The legacy logic checks for other sales on the same table that don't have an invoice yet
             $checkTableOrder = Sale::where('table_id', $tableId)
                 ->where('branch_id', $salesBranch)
                 ->where('status', '<>', 'X')
-                ->whereDoesntHave('invoice')
+                ->whereDoesntHave('invoices')
                 ->count();
 
             if ($checkTableOrder == 0) {
-                // Release the table
-                Table::findOrFail($tableId)
-                    ->update(['status' => 'available']);
+                Table::findOrFail($tableId)->update(['status' => 'available']);
             }
 
             return response()->json([
                 'err' => 0, 
                 'msg' => 'Success',
-                'data' => $sale->with('branch', 'employee', 'customer', 'records.product', 'records.package')->get(),
+                'data' => Sale::with('branch', 'employee', 'customer', 'records.product', 'records.package', 'invoices')->where('id', $salesId)->get(),
                 'unpaid-order' => $checkTableOrder
             ]);
         });

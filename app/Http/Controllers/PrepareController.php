@@ -9,12 +9,22 @@ use Illuminate\Support\Facades\DB;
 
 class PrepareController
 {
-    public function index(Request $request)
+    public function index()
     {
+        $prepares = Prepare::all()->map(function($p) {
+            $lastStock = \App\Models\Stock::where('item_type', 'PREP')
+                ->where('item_code', $p->id)
+                ->latest()
+                ->first();
+            
+            $p->purchase_price = $lastStock ? $lastStock->purchase_price : 0;
+            return $p;
+        });
+
         return response()->json([
             'err' => 0,
             'msg' => '',
-            'data' => Prepare::all()
+            'data' => $prepares
         ]);
     }
 
@@ -42,20 +52,22 @@ class PrepareController
             // 1. Save or Update the Main Item
             $prepare = Prepare::updateOrCreate(
                 ['id' => $request->id],
-                $request->only(['name', 'category_id', 'price', 'soldout'])
+                $request->only(['name', 'cost', 'quantity', 'unit'])
             );
 
-            // 2. Clear existing recipe
-            $prepare->ingredients()->delete();
+            // 2. Clear existing recipes
+            $prepare->recipes()->delete();
 
             // 3. Insert new recipe rows
             if ($request->has('recipe')) {
                 foreach ($request->recipe as $ingr) {
-                    if ($ingr['ingredient_id'] && $ingr['qty'] > 0) {
-                        $prepare->ingredients()->create([
-                            'ingredient_code' => $ingr['ingredient_id'],
-                            'quantity' => $ingr['qty'],
-                            'unit' => $ingr['unit']
+                    if (isset($ingr['item_code']) && (float)$ingr['quantity'] > 0) {
+                        $prepare->recipes()->create([
+                            'item_type' => $ingr['item_type'] ?? 'INGR',
+                            'item_code' => $ingr['item_code'],
+                            'quantity' => $ingr['quantity'],
+                            'unit' => $ingr['unit'],
+                            'purchase_price' => $ingr['purchase_price'] ?? 0
                         ]);
                     }
                 }
@@ -77,9 +89,14 @@ class PrepareController
 
     public function getRecipe($prepareCode)
     {
-        $recipes = PrepareRecipe::with('ingredient')
+        $recipes = PrepareRecipe::with(['item'])
             ->where('prepare_id', $prepareCode)
-            ->get();
+            ->get()
+            ->map(function($r) {
+                // Ensure frontend compatibility
+                $r->ingredient_id = $r->item_code;
+                return $r;
+            });
 
         return response()->json([
             'err' => 0,

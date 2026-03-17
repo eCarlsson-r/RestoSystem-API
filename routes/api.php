@@ -33,7 +33,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::prefix('tables')->group(function () {
         Route::get('/', [TableController::class, 'index']);
-        Route::get('/floor', [TableController::class, 'floorIndex']);
         Route::post('/', [TableController::class, 'store']);
         Route::post('/use', [TableController::class, 'useTable']);
         Route::post('/release', [TableController::class, 'releaseTable']);

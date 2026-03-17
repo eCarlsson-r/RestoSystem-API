@@ -7,6 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 class Prepare extends Model
 {
     protected $fillable = [
-        'name', 'cost', 'qty', 'unit'
+        'name', 'cost', 'quantity', 'unit'
     ];
+
+    public function recipes()
+    {
+        return $this->hasMany(PrepareRecipe::class);
+    }
 }

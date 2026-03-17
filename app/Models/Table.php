@@ -15,7 +15,7 @@ class Table extends Model
 
     public function sales()
     {
-        return $this->hasMany(Sale::class, 'table_id')->where('status', '<>', 'D')->where('status', '<>', 'X');
+        return $this->hasMany(Sale::class, 'table_id')->where('status', '<>', 'X')->whereDoesntHave('invoices');
     }
 
     public function branch()

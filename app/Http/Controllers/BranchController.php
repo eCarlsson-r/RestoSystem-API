@@ -23,24 +23,24 @@ class BranchController
             $branch = Branch::updateOrCreate(
                 ['id' => $branchId],
                 [
-                    'name' => $request->input('branch-name'),
-                    'address' => $request->input('branch-address'),
-                    'phone' => $request->input('branch-phone'),
-                    'floor_number' => $request->input('branch-floor-no'),
-                    'kitchen_no' => $request->input('branch-kitchen-no'),
-                    'bartender_no' => $request->input('branch-bartender-no'),
+                    'name' => $request->input('name'),
+                    'address' => $request->input('address'),
+                    'phone' => $request->input('phone'),
+                    'floor_number' => $request->input('floor_number'),
+                    'kitchen_no' => $request->input('kitchen_no'),
+                    'bartender_no' => $request->input('bartender_no'),
                 ]
             );
 
             // Legacy logic: Auto-generate tables if creating a new branch
-            if ($request->has('branch-table-no')) {
-                $tableCount = $request->input('branch-table-no');
-                $floorCount = $request->input('branch-floor-no');
+            if ($request->has('table_number')) {
+                $tableCount = $request->input('table_number');
+                $floorCount = $request->input('floor_number');
                 
                 for ($f = 1; $f <= $floorCount; $f++) {
                     for ($t = 1; $t <= $tableCount; $t++) {
-                        $col = 5 + ((($t - 1) % 8) * 100);
-                        $row = 5 + (intdiv(($t - 1), 8) * 100);
+                        $col = ($t - 1) % 8;
+                        $row = intdiv(($t - 1), 8);
                         
                         Table::updateOrCreate(
                             [
@@ -73,17 +73,19 @@ class BranchController
         // Simple implementation of legacy account generation
         for ($i = 0; $i < $branch->kitchen_no; $i++) {
             $suffix = ($i == 0) ? '' : $i;
+            $kitchenName = ($branch->kitchen_no > 1) ? 'Kitchen #'.$sufix.' ' . $branch->name : 'Kitchen ' . $branch->name;
             User::firstOrCreate(
                 ['username' => $branch->id . '_KTCN' . $suffix],
-                ['password' => bcrypt('1234'), 'type' => 'KITCHEN', 'name' => 'Kitchen ' . $branch->name]
+                ['password' => bcrypt('1234'), 'type' => 'KITCHEN', 'name' => $kitchenName]
             );
         }
 
         for ($i = 0; $i < $branch->bartender_no; $i++) {
             $suffix = ($i == 0) ? '' : $i;
+            $bartenderName = ($branch->bartender_no > 1) ? 'Bartender #'.$sufix.' ' . $branch->name : 'Bartender ' . $branch->name;
             User::firstOrCreate(
                 ['username' => $branch->id . '_BART' . $suffix],
-                ['password' => bcrypt('1234'), 'type' => 'KITCHEN', 'name' => 'Bartender ' . $branch->name]
+                ['password' => bcrypt('1234'), 'type' => 'KITCHEN', 'name' => $bartenderName]
             );
         }
     }

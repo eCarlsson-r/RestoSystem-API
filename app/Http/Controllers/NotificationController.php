@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\NotificationSubscription;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class NotificationController
@@ -15,6 +16,15 @@ class NotificationController
             'publicKey' => 'required|string',
             'authToken' => 'required|string',
         ]);
+
+        $user = User::find($request->input('login-id'));
+
+        $user->updatePushSubscription(
+            $request->input('endpoint'), 
+            $request->input('publicKey'), 
+            $request->input('authToken'), 
+            $request->input('contentEncoding')
+        );
 
         $subscription = NotificationSubscription::updateOrCreate(
             [
@@ -40,6 +50,10 @@ class NotificationController
             'login-id' => 'required',
             'endpoint' => 'required|string',
         ]);
+
+        $user = User::find($request->input('login-id'));
+
+        $user->deletePushSubscription($request->input('endpoint'));
 
         NotificationSubscription::where('user_id', $request->input('login-id'))
             ->where('endpoint', $request->input('endpoint'))

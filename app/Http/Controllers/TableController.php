@@ -11,16 +11,7 @@ class TableController
 {
     public function index(Request $request)
     {
-        return response()->json([
-            'err' => 0,
-            'msg' => '',
-            'data' => Table::with('sales')->where('floor_number', $request->input('floor'))->get()
-        ]);
-    }
-
-    public function floorIndex(Request $request)
-    {
-        $tables = Table::where('branch_id', $request->branch_id)
+        $tables = Table::with('sales')->where('branch_id', $request->branch_id)
             ->where('floor_number', $request->floor_number)
             ->get();
             

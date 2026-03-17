@@ -13,8 +13,10 @@ class RecipeSeeder extends Seeder
         DB::table('recipes')->insert([
             [
                 'product_id' => '1',
-                'ingredient_id' => '1', // Salt
-                'qty' => 0.01,
+                'item_type' => 'INGR',
+                'item_code' => '1', // Salt
+                'quantity' => 0.01,
+                'unit' => 'g',
                 'purchase_price' => 500,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -25,8 +27,10 @@ class RecipeSeeder extends Seeder
         DB::table('prepare_recipes')->insert([
             [
                 'prepare_id' => '1',
-                'ingredient_id' => '4', // Garlic
-                'qty' => 1,
+                'item_type' => 'INGR',
+                'item_code' => '4', // Garlic
+                'quantity' => 1,
+                'unit' => 'g',
                 'purchase_price' => 2000,
                 'created_at' => now(),
                 'updated_at' => now(),

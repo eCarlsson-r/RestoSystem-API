@@ -33,7 +33,8 @@ class VoucherController
             'code' => $request->input('voucher-code'),
             'value' => $request->input('voucher-value'),
             'status' => 'ACTIVE',
-            'expiry_date' => $request->input('expiry_date'),
+            'min_order_amount' => $request->input('min_order_amount'),
+            'valid_until' => $request->input('valid_until'),
         ]);
 
         return response()->json(['err' => 0, 'msg' => 'Voucher registered', 'data' => $voucher]);

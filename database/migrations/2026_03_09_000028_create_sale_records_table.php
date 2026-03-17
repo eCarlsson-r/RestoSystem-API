@@ -23,6 +23,7 @@ return new class extends Migration
             $table->date('order_date')->nullable();
             $table->time('order_time')->nullable();
             $table->string('deliver_employee', 5)->nullable();
+            $table->timestamp('printed_at')->nullable();
             $table->timestamps();
         });
     }

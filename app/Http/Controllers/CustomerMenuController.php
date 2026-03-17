@@ -7,6 +7,11 @@ use App\Events\WaiterCalled;
 
 class CustomerMenuController
 {
+    private $notificationService;
+
+    public function __construct(NotificationService $notificationService) {
+        $this->notificationService = $notificationService;
+    }
     public function getMenu($branchCode) {
         $categories = DB::table('category')->get();
         
@@ -26,11 +31,8 @@ class CustomerMenuController
         $table = $request->table;
         $branch = $request->branch;
 
-        // Optional: Log the request for performance analytics
-        // Notification::send(Staff::atBranch($branch), new WaiterCalled($table));
-
         // Broadcast the event to the Nuxt POS
-        broadcast(new WaiterCalled($table, $branch))->toOthers();
+        $this->notificationService->notifyWaiterCalled($table, $branch);
 
         return response()->json(['message' => 'Staff notified']);
     }

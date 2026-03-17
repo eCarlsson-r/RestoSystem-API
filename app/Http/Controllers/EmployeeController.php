@@ -36,17 +36,17 @@ class EmployeeController
             $employee = Employee::updateOrCreate(
                 ['id' => $empCode],
                 [
-                    'name' => $request->input('emp-name'),
-                    'branch_id' => $request->input('emp-branch-code'),
-                    'job_type' => $request->input('emp-job-type'),
-                    'gender' => $request->input('emp-gender'),
-                    'status' => $request->input('emp-status'),
-                    'join_date' => $request->input('emp-join-date'),
-                    'quit_date' => $request->input('emp-quit-date'),
-                    'home_address' => $request->input('emp-address'),
-                    'phone' => $request->input('emp-phone'),
-                    'mobile' => $request->input('emp-mobile'),
-                    'email' => $request->input('emp-email'),
+                    'name' => $request->input('name'),
+                    'branch_id' => $request->input('branch_id'),
+                    'job_type' => $request->input('job_type'),
+                    'gender' => $request->input('gender'),
+                    'status' => $request->input('status'),
+                    'join_date' => $request->input('join_date'),
+                    'quit_date' => $request->input('quit_date'),
+                    'home_address' => $request->input('home_address'),
+                    'phone' => $request->input('phone'),
+                    'mobile' => $request->input('mobile'),
+                    'email' => $request->input('email'),
                     'account_id' => $user ? $user->id : null,
                 ]
             );

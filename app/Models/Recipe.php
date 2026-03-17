@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Recipe extends Model
 {
     protected $fillable = [
-        'product_id', 'ingredient_id', 'qty', 'purchase_price'
+        'product_id', 'item_type', 'item_code', 'quantity', 'purchase_price'
     ];
 
     public function product()
@@ -15,8 +15,16 @@ class Recipe extends Model
         return $this->belongsTo(Product::class);
     }
 
+    public function item()
+    {
+        if ($this->item_type === 'PREP') {
+            return $this->belongsTo(Prepare::class, 'item_code');
+        }
+        return $this->belongsTo(Ingredient::class, 'item_code');
+    }
+
     public function ingredient()
     {
-        return $this->belongsTo(Ingredient::class);
+        return $this->belongsTo(Ingredient::class, 'item_code');
     }
 }
