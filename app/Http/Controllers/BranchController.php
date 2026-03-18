@@ -12,13 +12,13 @@ class BranchController
 {
     public function index(Request $request)
     {
-        return response()->json(['err' => 0, 'msg' => 'Branches fetched successfully', 'data' => Branch::all()]);
+        return response()->json(['err' => 0, 'msg' => 'Branches fetched successfully', 'data' => Branch::with('files')->get()]);
     }
 
     public function store(Request $request)
     {
         return DB::transaction(function () use ($request) {
-            $branchId = $request->input('branch-code');
+            $branchId = $request->input('id');
             
             $branch = Branch::updateOrCreate(
                 ['id' => $branchId],
@@ -63,6 +63,20 @@ class BranchController
 
             // Legacy logic for auto-creating accounts for kitchen/bartender
             $this->createServiceAccounts($branch);
+
+            if ($request->hasFile('images')) {
+                foreach ($request->file('images') as $file) {
+                    $path = $file->store('branches/gallery', 'public');
+                    $branch->files()->create([
+                        'file_name' => $file->getClientOriginalName(),
+                        'mime_type' => $file->getClientMimeType(),
+                        'extension' => $file->getClientOriginalExtension(),
+                        'size' => $file->getSize(),
+                        'disk' => 'public',
+                        'path' => $path
+                    ]);
+                }
+            }
 
             return response()->json(['err' => 0, 'msg' => 'Branch saved successfully', 'data' => $branch]);
         });

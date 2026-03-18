@@ -9,7 +9,7 @@ class CategoryController
 {
     public function index()
     {
-        $categories = Category::all();
+        $categories = Category::with('files')->get();
         
         return response()->json([
             'err' => 0,
@@ -28,6 +28,20 @@ class CategoryController
                 'description' => $request->input('description')
             ]
         );
+
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $file) {
+                $path = $file->store('products/gallery', 'public');
+                $product->files()->create([
+                    'file_name' => $file->getClientOriginalName(),
+                    'mime_type' => $file->getClientMimeType(),
+                    'extension' => $file->getClientOriginalExtension(),
+                    'size' => $file->getSize(),
+                    'disk' => 'public',
+                    'path' => $path
+                ]);
+            }
+        }
 
         return response()->json([
             'err' => 0,

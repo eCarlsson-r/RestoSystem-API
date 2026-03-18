@@ -32,4 +32,9 @@ class Branch extends Model
     {
         return $this->hasMany(Bar::class);
     }
+
+    public function files()
+    {
+        return $this->morphMany(File::class, 'model');
+    }
 }

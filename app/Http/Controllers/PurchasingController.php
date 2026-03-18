@@ -3,9 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\PurchaseOrder;
-use App\Models\PurchaseRecord;
+use App\Models\PurchaseOrderRecord;
 use App\Models\PurchaseReceive;
 use App\Models\PurchaseReturn;
+use App\Models\PurchaseReturnRecord;
 use App\Models\Stock;
 use App\Models\StockLog;
 use Illuminate\Http\Request;
@@ -14,19 +15,19 @@ use Illuminate\Support\Facades\DB;
 class PurchasingController
 {
     public function purchases() {
-        return PurchaseOrder::all();
+        return PurchaseOrder::with('supplier')->get();
     }
 
     public function purchase($id) {
-        return PurchaseOrder::findOrFail($id);
+        return PurchaseOrder::with('records')->findOrFail($id);
     }
 
     public function returns() {
-        return PurchaseReturn::all();
+        return PurchaseReturn::with('supplier')->get();
     }
 
     public function return($id) {
-        return PurchaseReturn::findOrFail($id);
+        return PurchaseReturn::with('purchase')->findOrFail($id);
     }
 
     public function storeOrder(Request $request)
@@ -36,18 +37,19 @@ class PurchasingController
                 'supplier_id' => $request->integer('supplier_id'),
                 'branch_id' => $request->integer('branch_id'),
                 'storage' => $request->input('storage'),
-                'date' => now()->toDateString(),
-                'time' => now()->toTimeString(),
+                'date' => $request->input('date'),
+                'delivery_date' => $request->input('delivery_date'),
                 'status' => 'P', // Pending
+                'description' => $request->input('description')
             ]);
 
             $items = $request->input('items', []);
             foreach ($items as $item) {
-                PurchaseRecord::create([
-                    'purchase_id' => $order->id,
+                PurchaseOrderRecord::create([
+                    'purchase_order_id' => $order->id,
                     'item_type' => $item['item_type'],
                     'item_code' => $item['item_code'],
-                    'qty' => $item['qty'],
+                    'quantity' => $item['quantity'],
                     'price' => $item['price'],
                 ]);
             }
@@ -56,33 +58,81 @@ class PurchasingController
         });
     }
 
+    public function storeReturn(Request $request)
+    {
+        return DB::transaction(function () use ($request) {
+            $return = PurchaseReturn::create([
+                'supplier_id' => $request->integer('supplier_id'),
+                'branch_id' => $request->integer('branch_id'),
+                'storage' => $request->input('storage'),
+                'date' => $request->input('date'),
+                'delivery_date' => $request->input('delivery_date'),
+                'description' => $request->input('description')
+            ]);
+
+            $items = $request->input('items', []);
+            foreach ($items as $item) {
+                PurchaseReturnRecord::create([
+                    'purchase_return_id' => $return->id,
+                    'item_type' => $item['item_type'],
+                    'item_code' => $item['item_code'],
+                    'quantity' => $item['quantity'],
+                    'price' => $item['price'],
+                ]);
+
+                $stock = Stock::firstOrCreate([
+                    'item_type' => $item['item_type'],
+                    'item_code' => $item['item_code'],
+                    'branch_id' => $request->integer('branch_id'),
+                    'storage' => $request->input('storage'),
+                ], [
+                    'purchase_price' => $item['price'],
+                    'quantity' => 0,
+                ]);
+
+                $stock->decrement('quantity', $item['quantity']);
+                $stock->update(['purchase_price' => $item['price']]);
+
+                StockLog::create([
+                    'stock_id' => $stock->id,
+                    'invoice_id' => 'PRT' . str_pad($return->id, 7, '0', STR_PAD_LEFT),
+                    'description' => 'Purchase Return',
+                    'get_qty' => $item['quantity'],
+                    'date' => now()->toDateString(),
+                    'time' => now()->toTimeString(),
+                ]);
+            }
+
+            return response()->json(['err' => 0, 'msg' => 'Purchase return created', 'return_id' => $return->id]);
+        });
+    }
+
     public function receiveOrder(Request $request)
     {
         return DB::transaction(function () use ($request) {
-            $order = PurchaseOrder::with('records')->findOrFail($request->order_id);
+            $order = PurchaseOrder::with('items')->findOrFail($request->order_id);
             
-            $receive = PurchaseReceive::create([
-                'purchase_id' => $order->id,
-                'date' => now()->toDateString(),
-                'time' => now()->toTimeString(),
-            ]);
+            $order->update(['status' => 'R']); // Received
 
-            foreach ($order->records as $record) {
+            foreach ($order->items as $item) {
                 $stock = Stock::firstOrCreate([
-                    'item_type' => $record->item_type,
-                    'item_code' => $record->item_code,
+                    'item_type' => $item->item_type,
+                    'item_code' => $item->item_code,
                     'branch_id' => $order->branch_id,
                     'storage' => $order->storage,
+                ], [
+                    'purchase_price' => $item->price,
+                    'quantity' => 0,
                 ]);
 
-                $stock->increment('quantity', $record->qty);
-                $stock->update(['purchase_price' => $record->price]);
+                $stock->increment('quantity', $item->quantity);
+                $stock->update(['purchase_price' => $item->price]);
 
                 StockLog::create([
                     'stock_id' => $stock->id,
                     'invoice_id' => 'PUR' . str_pad($order->id, 7, '0', STR_PAD_LEFT),
-                    'desc' => 'Purchase Receipt',
-                    'add_qty' => $record->qty,
+                    'description' => 'Purchase Receipt',
+                    'add_qty' => $item->quantity,
                     'date' => now()->toDateString(),
                     'time' => now()->toTimeString(),
                 ]);

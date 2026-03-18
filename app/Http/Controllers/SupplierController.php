@@ -15,17 +15,17 @@ class SupplierController
     public function store(Request $request)
     {
         $supplier = Supplier::updateOrCreate(
-            ['id' => $request->input('supplier-code')],
+            ['id' => $request->input('id')],
             [
-                'name' => $request->input('supplier-name'),
-                'branch_id' => $request->input('supply-branch'),
-                'storage' => $request->input('supply-storage'),
-                'contact_person' => $request->input('supplier-contact'),
-                'npwp' => $request->input('supplier-npwp'),
-                'address' => $request->input('supplier-address'),
-                'phone' => $request->input('supplier-phone'),
-                'mobile' => $request->input('supplier-cp-mobile'),
-                'email' => $request->input('supplier-email'),
+                'name' => $request->input('name'),
+                'branch_id' => $request->input('branch_id'),
+                'storage' => $request->input('storage'),
+                'contact_person' => $request->input('contact'),
+                'npwp' => $request->input('npwp'),
+                'address' => $request->input('address'),
+                'phone' => $request->input('phone'),
+                'mobile' => $request->input('mobile'),
+                'email' => $request->input('email'),
             ]
         );
 

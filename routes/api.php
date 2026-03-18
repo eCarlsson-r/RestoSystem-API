@@ -46,6 +46,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/', [BranchController::class, 'index']);
         Route::post('/', [BranchController::class, 'store']);
         Route::delete('/{id}', [BranchController::class, 'destroy']);
+        Route::delete('/image/{id}', [FileController::class, 'destroy']);
     });
 
     Route::prefix('rooms')->group(function () {
@@ -87,9 +88,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('purchasing')->group(function () {
         Route::get('/orders', [PurchasingController::class, 'purchases']);
         Route::get('/order/{id}', [PurchasingController::class, 'purchase']);
-        Route::post('/order', [PurchasingController::class, 'storeOrder']);
+        Route::post('/orders', [PurchasingController::class, 'storeOrder']);
         Route::post('/receive', [PurchasingController::class, 'receiveOrder']);
         Route::get('/returns', [PurchasingController::class, 'returns']);
+        Route::post('/returns', [PurchasingController::class, 'storeReturn']);
         Route::get('/returns/{id}', [PurchasingController::class, 'return']);
     });
 
@@ -103,6 +105,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/', [PackageController::class, 'index']);
         Route::post('/', [PackageController::class, 'store']);
         Route::delete('/{code}', [PackageController::class, 'destroy']);
+        Route::delete('/image/{id}', [FileController::class, 'destroy']);
     });
 
     Route::prefix('buffet')->group(function () {
@@ -128,6 +131,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/{id}', [ProductController::class, 'destroy']);
         Route::get('/{id}/recipe', [ProductController::class, 'getRecipe']);
         Route::post('/{id}/soldout', [ProductController::class, 'toggleSoldOut']);
+        Route::delete('/image/{id}', [FileController::class, 'destroy']);
     });
 
     Route::prefix('prepare')->group(function () {
@@ -142,6 +146,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/', [CategoryController::class, 'index']);
         Route::post('/', [CategoryController::class, 'store']);
         Route::delete('/{id}', [CategoryController::class, 'destroy']);
+        Route::delete('/image/{id}', [FileController::class, 'destroy']);
     });
 
     Route::prefix('stock')->group(function () {

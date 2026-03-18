@@ -10,11 +10,13 @@ return new class extends Migration
     {
         Schema::create('files', function (Blueprint $table) {
             $table->id();
-            $table->string('name', 200);
-            $table->string('type', 20);
-            $table->string('ext', 5);
-            $table->integer('size');
-            $table->date('upload_date');
+            $table->string('file_name'); 
+            $table->string('mime_type');
+            $table->string('extension', 10); 
+            $table->unsignedBigInteger('size');
+            $table->string('disk')->default('public');
+            $table->string('path');
+            $table->nullableMorphs('model');
             $table->timestamps();
         });
     }

@@ -7,11 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 class PurchaseOrder extends Model
 {
     protected $fillable = [
-        'supplier_id', 'date', 'delivery_date', 
-        'description', 'tax', 'status'
+        'supplier_id', 'branch_id', 'storage', 'date', 
+        'delivery_date', 'description', 'tax', 'status'
     ];
 
-    public function records()
+    public function items()
     {
         return $this->hasMany(PurchaseOrderRecord::class);
     }
@@ -19,5 +19,10 @@ class PurchaseOrder extends Model
     public function supplier()
     {
         return $this->belongsTo(Supplier::class);
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
     }
 }

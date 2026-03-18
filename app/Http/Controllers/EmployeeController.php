@@ -17,7 +17,7 @@ class EmployeeController
     public function store(Request $request)
     {
         return DB::transaction(function () use ($request) {
-            $empCode = $request->input('emp-code');
+            $empCode = $request->input('id');
             
             // Handle User account
             $user = null;

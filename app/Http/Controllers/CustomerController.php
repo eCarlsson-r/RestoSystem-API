@@ -15,16 +15,16 @@ class CustomerController
     public function store(Request $request)
     {
         $customer = Customer::updateOrCreate(
-            ['id' => $request->input('customer-code')],
+            ['id' => $request->input('id')],
             [
-                'name' => $request->input('customer-name'),
-                'gender' => $request->input('customer-gender'),
-                'address' => $request->input('customer-address'),
-                'pob' => $request->input('customer-pob'),
-                'dob' => $request->input('customer-dob'),
-                'mobile' => $request->input('customer-mobile'),
-                'email' => $request->input('customer-email'),
-                'discount' => $request->input('customer-discount', 0),
+                'name' => $request->input('name'),
+                'gender' => $request->input('gender'),
+                'address' => $request->input('address'),
+                'pob' => $request->input('pob'),
+                'dob' => $request->input('dob'),
+                'mobile' => $request->input('mobile'),
+                'email' => $request->input('email'),
+                'discount' => $request->input('discount', 0),
                 'tax' => $request->input('customer-tax', 10),
             ]
         );

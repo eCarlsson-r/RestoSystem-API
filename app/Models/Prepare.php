@@ -10,7 +10,7 @@ class Prepare extends Model
         'name', 'cost', 'quantity', 'unit'
     ];
 
-    public function recipes()
+    public function recipe()
     {
         return $this->hasMany(PrepareRecipe::class);
     }

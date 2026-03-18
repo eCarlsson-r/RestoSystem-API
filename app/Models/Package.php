@@ -14,4 +14,9 @@ class Package extends Model
     {
         return $this->hasMany(PackageProduct::class);
     }
+
+    public function files()
+    {
+        return $this->morphMany(File::class, 'model');
+    }
 }

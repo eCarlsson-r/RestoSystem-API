@@ -18,7 +18,7 @@ class ProductController
     
     public function index(Request $request)
     {
-        $query = Product::with(['category']);
+        $query = Product::with(['category', 'recipe.item', 'files']);
         
         if (!$request->has('all')) {
             $query->where('soldout', 0);
@@ -58,7 +58,7 @@ class ProductController
 
     public function show($id)
     {
-        $product = Product::with(['category'])->findOrFail($id)->first();
+        $product = Product::with(['category', 'files'])->findOrFail($id)->first();
 
         if (!$product) {
             return response()->json(['err' => 1, 'msg' => 'product-not-exist']);
@@ -80,23 +80,38 @@ class ProductController
             // 1. Save or Update the Main Item
             $product = Product::updateOrCreate(
                 ['id' => $request->id],
-                $request->only(['name', 'category_id', 'price', 'cost', 'soldout'])
+                $request->only(['name', 'category_id', 'price', 'cost', 'description', 'soldout'])
             );
 
-            // 2. Clear existing recipes
-            $product->recipes()->delete();
+            // 2. Clear existing recipe
+            $product->recipe()->delete();
 
             // 3. Insert new recipe rows
             if ($request->has('recipe')) {
                 foreach ($request->recipe as $ingr) {
-                    if (isset($ingr['ingredient_id']) && (float)$ingr['quantity'] > 0) {
-                        $product->recipes()->create([
+                    if (isset($ingr['item_code']) && (float)$ingr['quantity'] > 0) {
+                        $product->recipe()->create([
                             'item_type' => $ingr['item_type'] ?? 'INGR',
-                            'item_code' => $ingr['ingredient_id'],
-                            'qty' => $ingr['quantity'],
+                            'item_code' => $ingr['item_code'],
+                            'quantity' => $ingr['quantity'],
+                            'unit' => $ingr['unit'],
                             'purchase_price' => $ingr['purchase_price'] ?? 0
                         ]);
                     }
+                }
+            }
+
+            if ($request->hasFile('images')) {
+                foreach ($request->file('images') as $file) {
+                    $path = $file->store('products/gallery', 'public');
+                    $product->files()->create([
+                        'file_name' => $file->getClientOriginalName(),
+                        'mime_type' => $file->getClientMimeType(),
+                        'extension' => $file->getClientOriginalExtension(),
+                        'size' => $file->getSize(),
+                        'disk' => 'public',
+                        'path' => $path
+                    ]);
                 }
             }
 
@@ -116,7 +131,7 @@ class ProductController
 
     public function getRecipe($productCode)
     {
-        $recipes = Recipe::with(['item'])
+        $recipe = Recipe::with(['item'])
             ->where('product_id', $productCode)
             ->get()
             ->map(function($r) {
@@ -130,7 +145,7 @@ class ProductController
         return response()->json([
             'err' => 0,
             'msg' => '',
-            'data' => $recipes
+            'data' => $recipe
         ]);
     }
 }

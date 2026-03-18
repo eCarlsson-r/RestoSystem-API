@@ -19,8 +19,11 @@ class StockController
         if ($request->has('branch_id')) {
             $query->where('branch_id', $request->branch_id);
         }
-        
-        $stocks = $query->get();
+
+        if ($request->has('storage')) {
+            $query->where('storage', $request->storage);
+        }
+        $stocks = $query->with(['branch', 'ingredient', 'utility'])->get();
 
         return response()->json([
             'err' => 0,

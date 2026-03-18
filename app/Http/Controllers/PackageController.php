@@ -11,7 +11,7 @@ class PackageController
 {
     public function index()
     {
-        $packages = Package::with('products')->get();
+        $packages = Package::with('products', 'files')->get();
         return response()->json(['err' => 0, 'data' => $packages]);
     }
 
@@ -35,6 +35,20 @@ class PackageController
                         'package_id' => $package->code,
                         'product_id' => $item['product_id'],
                         'qty' => $item['qty']
+                    ]);
+                }
+            }
+
+            if ($request->hasFile('images')) {
+                foreach ($request->file('images') as $file) {
+                    $path = $file->store('packages/gallery', 'public');
+                    $package->files()->create([
+                        'file_name' => $file->getClientOriginalName(),
+                        'mime_type' => $file->getClientMimeType(),
+                        'extension' => $file->getClientOriginalExtension(),
+                        'size' => $file->getSize(),
+                        'disk' => 'public',
+                        'path' => $path
                     ]);
                 }
             }

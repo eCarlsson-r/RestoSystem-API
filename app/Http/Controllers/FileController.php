@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\File as FileModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 
 class FileController
 {
@@ -87,6 +88,26 @@ class FileController
             return response()->json([
                 'err' => 1,
                 'msg' => 'Failed to upload file.'
+            ]);
+        }
+    }
+
+    public function destroy($id)
+    {
+        $file = FileModel::find($id);
+
+        if ($file) {
+            Storage::disk($file->disk)->delete($file->path);
+            $file->delete();
+
+            return response()->json([
+                'err' => 0,
+                'msg' => 'File successfully deleted'
+            ]);
+        } else {
+            return response()->json([
+                'err' => 1,
+                'msg' => 'File not found'
             ]);
         }
     }

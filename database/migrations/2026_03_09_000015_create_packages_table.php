@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->string('name', 50);
             $table->integer('price');
-            $table->string('desc', 200)->nullable();
+            $table->string('description', 200)->nullable();
             $table->timestamps();
         });
     }

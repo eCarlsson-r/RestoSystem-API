@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Prepare;
 use App\Models\PrepareRecipe;
+use App\Models\Stock;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -11,8 +12,8 @@ class PrepareController
 {
     public function index()
     {
-        $prepares = Prepare::all()->map(function($p) {
-            $lastStock = \App\Models\Stock::where('item_type', 'PREP')
+        $prepares = Prepare::with('recipe.item')->get()->map(function($p) {
+            $lastStock = Stock::where('item_type', 'PREP')
                 ->where('item_code', $p->id)
                 ->latest()
                 ->first();
@@ -55,14 +56,14 @@ class PrepareController
                 $request->only(['name', 'cost', 'quantity', 'unit'])
             );
 
-            // 2. Clear existing recipes
-            $prepare->recipes()->delete();
+            // 2. Clear existing recipe
+            $prepare->recipe()->delete();
 
             // 3. Insert new recipe rows
             if ($request->has('recipe')) {
                 foreach ($request->recipe as $ingr) {
                     if (isset($ingr['item_code']) && (float)$ingr['quantity'] > 0) {
-                        $prepare->recipes()->create([
+                        $prepare->recipe()->create([
                             'item_type' => $ingr['item_type'] ?? 'INGR',
                             'item_code' => $ingr['item_code'],
                             'quantity' => $ingr['quantity'],
@@ -89,7 +90,7 @@ class PrepareController
 
     public function getRecipe($prepareCode)
     {
-        $recipes = PrepareRecipe::with(['item'])
+        $recipe = PrepareRecipe::with(['item'])
             ->where('prepare_id', $prepareCode)
             ->get()
             ->map(function($r) {
@@ -101,7 +102,7 @@ class PrepareController
         return response()->json([
             'err' => 0,
             'msg' => '',
-            'data' => $recipes
+            'data' => $recipe
         ]);
     }
 }

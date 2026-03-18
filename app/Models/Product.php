@@ -13,8 +13,13 @@ class Product extends Model
         return $this->belongsTo(Category::class);
     }
 
-    public function recipes()
+    public function recipe()
     {
         return $this->hasMany(Recipe::class);
+    }
+
+    public function files()
+    {
+        return $this->morphMany(File::class, 'model');
     }
 }
