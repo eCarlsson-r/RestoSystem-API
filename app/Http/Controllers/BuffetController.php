@@ -24,7 +24,7 @@ class BuffetController
                 ['id' => $request->input('package_id')],
                 [
                     'name' => $request->input('package_name'),
-                    'desc' => $request->input('package_desc'),
+                    'description' => $request->input('package_desc'),
                     'price' => $request->input('package_price'),
                     'type' => 'BUFFET'
                 ]
@@ -36,7 +36,7 @@ class BuffetController
                     PackageProduct::create([
                         'package_id' => $package->code,
                         'product_id' => $product['product_id'],
-                        'qty' => $product['qty'] ?? 1
+                        'quantity' => $product['quantity'] ?? 1
                     ]);
                 }
             }
@@ -65,7 +65,7 @@ class BuffetController
                     'sale_id' => $sale->id,
                     'item_id' => $pkg['package_id'], // In legacy, item_id can be product or package
                     'item_type' => 'PACKAGE',
-                    'qty' => $pkg['qty'],
+                    'quantity' => $pkg['quantity'],
                     'price' => $pkg['price'],
                     'discount' => 0,
                     'employee_id' => $request->employee_id,

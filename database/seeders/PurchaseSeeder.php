@@ -13,6 +13,8 @@ class PurchaseSeeder extends Seeder
         DB::table('purchase_orders')->insert([
             [
                 'id' => 1,
+                'branch_id' => 1,
+                'storage' => 'MAIN',
                 'supplier_id' => 1,
                 'date' => '2024-03-01',
                 'delivery_date' => '2024-03-05',

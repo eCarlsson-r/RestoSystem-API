@@ -3,11 +3,12 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Models\Sale;
 use App\Models\SaleRecord;
 use App\Models\SaleInvoice;
 use App\Models\Table;
-use Illuminate\Support\Facades\DB;
+use App\Notifications\SaleConfirmed;
 
 class SalesController
 {
@@ -183,6 +184,22 @@ class SalesController
                 Table::findOrFail($tableId)->update(['status' => 'available']);
             }
 
+            // Trigger Kitchen Notification
+            broadcast(new StationNotification('kitchen', [
+                'title' => 'Pesanan Baru',
+                'type' => 'pendingorder',
+                'sales-id' => $sale->id,
+                'table-number' => $sale->table_number,
+                'body' => "Pesanan di Meja {$sale->table_number}"
+            ]));
+
+            // Trigger Admin Notification
+            broadcast(new StationNotification('admin', [
+                'title' => 'Pesanan Baru',
+                'type' => 'sales',
+                'body' => "Pesanan di Meja {$sale->table_number}"
+            ]));
+
             return response()->json([
                 'err' => 0, 
                 'msg' => 'Success',
@@ -213,13 +230,13 @@ class SalesController
             foreach ($itemsToMove as $move) {
                 $record = SaleRecord::findOrFail($move['id']);
                 
-                if ($record->qty > $move['qty']) {
+                if ($record->qty > $move['quantity']) {
                     // Split the record
-                    $record->decrement('qty', $move['qty']);
+                    $record->decrement('quantity', $move['quantity']);
                     
                     $newRecord = $record->replicate();
                     $newRecord->sale_id = $newSale->id;
-                    $newRecord->qty = $move['qty'];
+                    $newRecord->qty = $move['quantity'];
                     $newRecord->save();
                 } else {
                     // Move entire record
@@ -265,14 +282,6 @@ class SalesController
         });
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
     public function updateCustomer(Request $request) {
         $sale = Sale::findOrFail($request->sales_id);
         $customer = Customer::findOrFail($request->customer_id);
@@ -284,13 +293,5 @@ class SalesController
         ]);
 
         return response()->json(['message' => 'Customer linked', 'tax' => $customer->{'tax'}]);
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
     }
 }

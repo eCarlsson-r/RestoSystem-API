@@ -14,17 +14,13 @@ class PackageSeeder extends Seeder
                 'id' => 1,
                 'name' => 'Couple Package',
                 'price' => 75000,
-                'desc' => '2 Meals + 2 Drinks',
-                'created_at' => now(),
-                'updated_at' => now(),
+                'description' => '2 Meals + 2 Drinks'
             ],
             [
                 'id' => 2,
                 'name' => 'Family Package',
                 'price' => 150000,
-                'desc' => '4 Meals + 4 Drinks + 1 Snack',
-                'created_at' => now(),
-                'updated_at' => now(),
+                'description' => '4 Meals + 4 Drinks + 1 Snack'
             ],
         ]);
     }

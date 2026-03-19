@@ -12,13 +12,13 @@ class MovementSeeder extends Seeder
         DB::table('stock_movements')->insert([
             [
                 'id' => 1,
-                'from_branch_id' => '001',
-                'from_storage' => 'WARH',
-                'to_branch_id' => '002',
-                'to_storage' => 'SHOP',
+                'from_branch_id' => 1,
+                'from_storage' => 'MAIN',
+                'to_branch_id' => 1,
+                'to_storage' => 'KTCN',
                 'date' => '2024-03-10',
                 'time' => '10:00:00',
-                'status' => 'DONE',
+                'status' => 'R',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -28,8 +28,8 @@ class MovementSeeder extends Seeder
             [
                 'movement_id' => 1,
                 'item_type' => 'INGR',
-                'item_code' => '1', // Salt
-                'qty' => 5,
+                'item_code' => 1, // Salt
+                'quantity' => 5,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],

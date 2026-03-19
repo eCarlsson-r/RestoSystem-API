@@ -56,7 +56,7 @@ class CustomerMenuController
             ->map(fn($item) => [
                 'name' => $item->product->{'product-name'},
                 'status' => $item->{'item-status'},
-                'qty' => 1
+                'quantity' => 1
             ]);
     }
 }

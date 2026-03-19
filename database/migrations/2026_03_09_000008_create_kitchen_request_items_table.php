@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('request_id')->constrained('kitchen_requests')->onDelete('cascade');
             $table->string('item_type', 4);
             $table->string('item_code', 5);
-            $table->integer('qty');
+            $table->integer('quantity');
             $table->timestamps();
         });
     }

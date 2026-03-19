@@ -34,7 +34,7 @@ class PackageController
                     PackageProduct::create([
                         'package_id' => $package->code,
                         'product_id' => $item['product_id'],
-                        'qty' => $item['qty']
+                        'quantity' => $item['quantity']
                     ]);
                 }
             }

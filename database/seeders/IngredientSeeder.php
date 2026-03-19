@@ -13,42 +13,32 @@ class IngredientSeeder extends Seeder
             [
                 'id' => 1,
                 'name' => 'Salt',
-                'desc' => 'Table salt',
-                'unit' => 'kg',
-                'created_at' => now(),
-                'updated_at' => now(),
+                'description' => 'Table salt',
+                'unit' => 'KG'
             ],
             [
                 'id' => 2,
                 'name' => 'Sugar',
-                'desc' => 'Granulated sugar',
-                'unit' => 'kg',
-                'created_at' => now(),
-                'updated_at' => now(),
+                'description' => 'Granulated sugar',
+                'unit' => 'KG'
             ],
             [
                 'id' => 3,
                 'name' => 'Cooking Oil',
-                'desc' => 'Vegetable oil',
-                'unit' => 'liter',
-                'created_at' => now(),
-                'updated_at' => now(),
+                'description' => 'Vegetable oil',
+                'unit' => 'LTR'
             ],
             [
                 'id' => 4,
                 'name' => 'Garlic',
-                'desc' => 'Fresh garlic',
-                'unit' => 'kg',
-                'created_at' => now(),
-                'updated_at' => now(),
+                'description' => 'Fresh garlic',
+                'unit' => 'KG'
             ],
             [
                 'id' => 5,
                 'name' => 'Onion',
-                'desc' => 'Red onion',
-                'unit' => 'kg',
-                'created_at' => now(),
-                'updated_at' => now(),
+                'description' => 'Red onion',
+                'unit' => 'KG'
             ],
         ]);
     }

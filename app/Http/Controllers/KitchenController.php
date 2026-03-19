@@ -106,7 +106,12 @@ class KitchenController
         $sale->save();
 
         // Broadcast to the Waiters
-        $this->notificationService->notifyOrderReady($sale);
+        broadcast(new StationNotification("waiter.{$waiterId}", [
+            'title' => 'Pesanan Siap Dihidangkan',
+            'type' => 'sales',
+            'sales-id' => $salesId,
+            'body' => "Meja {$tableNumber} Lantai {$floorNumber} siap!"
+        ]));
 
         return response()->json([
             'err' => 0,

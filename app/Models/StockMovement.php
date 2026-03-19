@@ -15,4 +15,14 @@ class StockMovement extends Model
     {
         return $this->hasMany(StockMovementRecord::class, 'movement_id');
     }
+
+    public function from_branch()
+    {
+        return $this->belongsTo(Branch::class, 'from_branch_id');
+    }
+
+    public function to_branch()
+    {
+        return $this->belongsTo(Branch::class, 'to_branch_id');
+    }
 }

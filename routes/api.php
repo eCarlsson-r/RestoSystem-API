@@ -153,12 +153,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/', [StockController::class, 'index']);
         Route::post('/', [StockController::class, 'store']);
         Route::get('/transfers', [StockController::class, 'transfers']);
-        Route::post('/move', [StockController::class, 'move']);
+        Route::post('/transfers', [StockController::class, 'move']);
         Route::post('/receive/{id}', [StockController::class, 'receive']);
         Route::get('/card', [StockController::class, 'getStockCard']);
         Route::get('/requests', [StockController::class, 'kitchenRequest']);
-        Route::post('/request/approve', [StockController::class, 'approveRequest']);
-        Route::post('/request/reject', [StockController::class, 'rejectRequest']);
+        Route::post('/requests/approve', [StockController::class, 'approveRequest']);
+        Route::post('/requests/reject', [StockController::class, 'rejectRequest']);
         Route::get('/mutation', [StockController::class, 'getStockMutation']);
     });
 

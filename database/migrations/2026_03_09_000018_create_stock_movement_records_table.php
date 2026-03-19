@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('movement_id')->constrained('stock_movements')->onDelete('cascade');
             $table->string('item_type', 4);
             $table->string('item_code', 10);
-            $table->integer('qty');
+            $table->integer('quantity');
             $table->timestamps();
         });
     }

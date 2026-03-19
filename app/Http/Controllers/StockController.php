@@ -102,7 +102,7 @@ class StockController
 
             StockLog::create([
                 'stock_id' => $stock->id,
-                'desc' => $request->input('desc', 'Stock Update'),
+                'description' => $request->input('description', 'Stock Update'),
                 'add_qty' => $request->quantity,
                 'date' => now()->toDateString(),
                 'time' => now()->toTimeString(),
@@ -131,7 +131,7 @@ class StockController
                     'movement_id' => $movement->id,
                     'item_type' => $item['item_type'],
                     'item_code' => $item['item_code'],
-                    'qty' => $item['qty'],
+                    'quantity' => $item['quantity'],
                 ]);
             }
 
@@ -162,7 +162,7 @@ class StockController
                     StockLog::create([
                         'stock_id' => $fromStock->id,
                         'invoice_id' => 'MOV' . str_pad($movement->id, 7, '0', STR_PAD_LEFT),
-                        'desc' => 'Moved to ' . $movement->to_branch_id,
+                        'description' => 'Moved to ' . $movement->to_branch_id,
                         'get_qty' => $record->qty,
                         'date' => now()->toDateString(),
                         'time' => now()->toTimeString(),
@@ -181,7 +181,7 @@ class StockController
                 StockLog::create([
                     'stock_id' => $toStock->id,
                     'invoice_id' => 'MOV' . str_pad($movement->id, 7, '0', STR_PAD_LEFT),
-                    'desc' => 'Received from ' . $movement->from_branch_id,
+                    'description' => 'Received from ' . $movement->from_branch_id,
                     'add_qty' => $record->qty,
                     'date' => now()->toDateString(),
                     'time' => now()->toTimeString(),
@@ -243,10 +243,53 @@ class StockController
 
     public function kitchenRequest(Request $request)
     {
-        $request = KitchenRequest::with('from_branch', 'to_branch')->get();
+        $request = KitchenRequest::with('from_branch', 'to_branch', 'items', 'items.ingredient', 'items.utility')->get();
         return response()->json([
             'err' => 0,
             'msg' => '',
+            'data' => $request
+        ]);
+    }
+
+    public function approveRequest(Request $request) {
+        $id = $request->id;
+        $request = KitchenRequest::with('from_branch', 'to_branch', 'items', 'items.ingredient', 'items.utility')->findOrFail($id);
+        $request->update(['status' => 'R']);
+
+        $movement = StockMovement::create([
+            'from_branch_id' => $request->from_branch_id,
+            'from_storage' => $request->from_storage,
+            'to_branch_id' => $request->to_branch_id,
+            'to_storage' => $request->to_storage,
+            'date' => now()->toDateString(),
+            'time' => now()->toTimeString(),
+            'status' => 'M', // Moving
+        ]);
+
+        $items = $request->items;
+        foreach ($items as $item) {
+            StockMovementRecord::create([
+                'movement_id' => $movement->id,
+                'item_type' => $item['item_type'],
+                'item_code' => $item['item_code'],
+                'quantity' => $item['quantity'],
+            ]);
+        }
+
+        return response()->json([
+            'err' => 0,
+            'msg' => 'Request approved',
+            'data' => $request
+        ]);
+    }
+
+    public function rejectRequest(Request $request) {
+        $id = $request->id;
+        $request = KitchenRequest::with('from_branch', 'to_branch', 'items', 'items.ingredient', 'items.utility')->findOrFail($id);
+        $request->update(['status' => 'C']);
+        return response()->json([
+            'err' => 0,
+            'msg' => 'Request rejected',
             'data' => $request
         ]);
     }

@@ -12,27 +12,18 @@ class UtilitySeeder extends Seeder
         DB::table('utilities')->insert([
             [
                 'id' => 1,
-                'name' => 'Electricity',
-                'desc' => 'Monthly electricity bill',
-                'unit' => 'kWh',
-                'created_at' => now(),
-                'updated_at' => now(),
+                'name' => 'Dining Spoon',
+                'unit' => 'PCS'
             ],
             [
                 'id' => 2,
-                'name' => 'Water',
-                'desc' => 'Monthly water bill',
-                'unit' => 'm3',
-                'created_at' => now(),
-                'updated_at' => now(),
+                'name' => 'Plate',
+                'unit' => 'PCS',
             ],
             [
-                'id' => 3,
-                'name' => 'Gas',
-                'desc' => 'LPG Gas 12kg',
-                'unit' => 'tube',
-                'created_at' => now(),
-                'updated_at' => now(),
+                'id' => 3,  
+                'name' => 'Dining Fork',
+                'unit' => 'PCS',
             ],
         ]);
     }

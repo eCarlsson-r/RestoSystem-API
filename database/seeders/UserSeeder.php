@@ -40,6 +40,26 @@ class UserSeeder extends Seeder
                 'type' => 'CASHIER',
                 'created_at' => now(),
                 'updated_at' => now(),
+            ],
+            [
+                'id' => 4,
+                'name' => 'Demo Kitchen',
+                'email' => 'kitchen@demo.com',
+                'username' => 'demo.kitchen',
+                'password' => Hash::make('Kt12345'),
+                'type' => 'KITCHEN',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => 5,
+                'name' => 'Demo Bartender',
+                'email' => 'bartender@demo.com',
+                'username' => 'demo.bartender',
+                'password' => Hash::make('Bt12345'),
+                'type' => 'BARTENDER',
+                'created_at' => now(),
+                'updated_at' => now(),
             ]
         ]);
     }

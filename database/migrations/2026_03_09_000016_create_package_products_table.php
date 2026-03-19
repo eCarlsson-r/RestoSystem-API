@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->string('package_id', 5);
             $table->string('product_id', 5);
-            $table->integer('qty');
+            $table->integer('quantity');
             $table->timestamps();
         });
     }
