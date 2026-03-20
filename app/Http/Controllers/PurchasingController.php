@@ -18,6 +18,115 @@ class PurchasingController
         return PurchaseOrder::with('supplier')->get();
     }
 
+    public function reportPurchase(Request $request) {
+        $start = $request->start;
+        $end = $request->end;
+        $branchId = $request->branch;
+        
+        // Base query for sales in this period/branch
+        if ($branchId != 'ALL') {
+            $salesQuery = PurchaseOrder::whereBetween('date', [$start, $end])
+                ->where('branch_id', $branchId);
+        } else {
+            $salesQuery = PurchaseOrder::whereBetween('date', [$start, $end]);
+        }
+
+        // 2. Fetch delivered sales with filtered records
+        $deliveredSalesQuery = (clone $salesQuery)->where('status', 'D');
+
+        $deliveredSales = $deliveredSalesQuery
+            ->with(['items'])
+            ->get();
+
+        $allRecords = collect();
+        foreach ($deliveredSales as $sale) {
+            $allRecords = $allRecords->concat($sale->items);
+        }
+
+        // 4. Group items for the table
+        $reportData = $allRecords->groupBy(function($record) {
+            return $record->item_type . '-' . $record->item_code;
+        })->map(function($group) {
+            $first = $group->first();
+            
+            $name = $first->item_type === 'INGR' 
+                    ? ($first->ingredient->name ?? 'Ingredient #'.$first->item_code)
+                    : ($first->utility->name ?? 'Utility #'.$first->item_code);
+
+            return [
+                'name'     => $name,
+                'quantity' => (float)$group->sum('quantity'),
+                'price'    => (float)$first->price, 
+                'total'    => (float)$group->sum(function($r) { 
+                    return $r->quantity * $r->price; 
+                })
+            ];
+        })->values();
+
+        return response()->json([
+            'err' => 0,
+            'msg' => '',
+            'data' => $reportData
+        ]);
+    }
+
+    public function reportSupplierPurchase(Request $request) {
+        $start = $request->start;
+        $end = $request->end;
+        $branchId = $request->branch;
+        $supplierId = $request->supplier_id;
+        
+        // Base query for sales in this period/branch
+        if ($branchId != 'ALL') {
+            $purchasesQuery = PurchaseOrder::whereBetween('date', [$start, $end])
+                ->where('branch_id', $branchId);
+        } else {
+            $purchasesQuery = PurchaseOrder::whereBetween('date', [$start, $end]);
+        }
+
+        if ($supplierId && $supplierId != 'ALL') {
+            $purchasesQuery->where('supplier_id', $supplierId);
+        }
+
+        // 2. Fetch delivered sales with filtered records
+        $deliveredPurchasesQuery = (clone $purchasesQuery)->where('status', 'D');
+
+        $deliveredPurchases = $deliveredPurchasesQuery
+            ->with(['items'])
+            ->get();
+
+        $allRecords = collect();
+        foreach ($deliveredPurchases as $purchase) {
+            $allRecords = $allRecords->concat($purchase->items);
+        }
+
+        // 4. Group items for the table
+        $reportData = $allRecords->groupBy(function($record) {
+            return $record->item_type . '-' . $record->item_code;
+        })->map(function($group) {
+            $first = $group->first();
+            
+            $name = $first->item_type === 'INGR' 
+                    ? ($first->ingredient->name ?? 'Ingredient #'.$first->item_code)
+                    : ($first->utility->name ?? 'Utility #'.$first->item_code);
+
+            return [
+                'name'     => $name,
+                'quantity' => (float)$group->sum('quantity'),
+                'price'    => (float)$first->price, 
+                'total'    => (float)$group->sum(function($r) { 
+                    return $r->quantity * $r->price; 
+                })
+            ];
+        })->values();
+
+        return response()->json([
+            'err' => 0,
+            'msg' => '',
+            'data' => $reportData
+        ]);
+    }
+
     public function purchase($id) {
         return PurchaseOrder::with('records')->findOrFail($id);
     }

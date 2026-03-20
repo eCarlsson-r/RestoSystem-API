@@ -20,11 +20,11 @@ class PrepareRecipe extends Model
 
     public function prepare()
     {
-        return $this->belongsTo(Prepare::class);
+        if ($this->item_type == 'PREP') return $this->belongsTo(Prepare::class, 'item_code');
     }
 
     public function ingredient()
     {
-        return $this->belongsTo(Ingredient::class);
+        if ($this->item_type == 'INGR') return $this->belongsTo(Ingredient::class, 'item_code');
     }
 }

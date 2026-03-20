@@ -15,4 +15,14 @@ class PurchaseOrderRecord extends Model
     {
         return $this->belongsTo(PurchaseOrder::class);
     }
+
+    public function ingredient()
+    {
+        if ($this->item_type == 'INGR') return $this->belongsTo(Ingredient::class, 'item_code');
+    }
+
+    public function utility()
+    {
+        if ($this->item_type == 'UTLT') return $this->belongsTo(Utility::class, 'item_code');
+    }
 }

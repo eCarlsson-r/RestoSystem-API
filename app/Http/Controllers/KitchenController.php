@@ -3,16 +3,17 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\SaleRecord;
+use App\Models\PrepareLog;
+use App\Models\Prepare;
 use App\Models\Sale;
+use App\Models\SaleRecord;
+use App\Models\Stock;
+use App\Models\StockLog;
+use App\Models\StockMovement;
+use App\Events\StationNotification;
 
 class KitchenController
 {
-    private $notificationService;
-
-    public function __construct(NotificationService $notificationService) {
-        $this->notificationService = $notificationService;
-    }
     /**
      * Display a listing of the resource.
      */
@@ -53,6 +54,25 @@ class KitchenController
         ]);
     }
 
+    public function approvedRequests(Request $request) {
+        $branch = $request->branch;
+        $station = $request->station;
+
+        $transfers = StockMovement::with([
+            'from_branch',
+            'to_branch',
+            'records',
+            'records.ingredient',
+            'records.utility'
+        ])->where('to_branch_id', $branch)->where('to_storage', $station)->where('status', 'M')->get();
+
+        return response()->json([
+            'err' => 0,
+            'msg' => '',
+            'data' => $transfers
+        ]);
+    }
+
     public function getCaptainTicket($salesId)
     {
         return DB::transaction(function () use ($salesId) {
@@ -80,20 +100,68 @@ class KitchenController
         });
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function prepare(Request $request)
     {
-        //
-    }
+        $request->validate([
+            "prepare_code" => "required",
+            "branch_code" => "required",
+            "storage" => "required",
+            "qty" => "required",
+            "note" => "nullable"
+        ]);
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
+        $prepare = Prepare::findOrFail($request->prepare_code);
+        $qty = $request->qty;
+        $note = $request->note;
+
+        foreach($prepare->recipe as $item) {
+            $stock = Stock::where([
+                'item_type' => $item->item_type,
+                'item_code' => $item->item_code,
+                'branch_id' => $request->branch_code,
+                'storage' => $request->storage,
+            ])->first();
+
+            if (!$stock) {
+                return response()->json([
+                    'err' => 1,
+                    'msg' => 'Stock not found'
+                ]);
+            }
+
+            if ($stock->quantity < $item->quantity * $qty) {
+                return response()->json([
+                    'err' => 1,
+                    'msg' => 'Stock not enough'
+                ]);
+            }
+            
+            $stock->decrement('quantity', $item->quantity * $qty);
+            StockLog::create([
+                'stock_id' => $stock->id,
+                'invoice_id' => 'PRP' . now()->toDateString(),
+                'description' => $note,
+                'get_qty' => $item->quantity * $qty,
+                'date' => now()->toDateString(),
+                'time' => now()->toTimeString(),
+            ]);
+        }
+
+        $prepareLog = PrepareLog::create([
+            'prepare_id' => $prepare->{'id'},
+            'qty' => $qty,
+            'note' => $note,
+            'branch_id' => $request->branch_code,
+            'storage' => $request->storage,
+            'date' => now()->toDateString(),
+            'time' => now()->toTimeString()
+        ]);
+
+        return response()->json([
+            'err' => 0,
+            'msg' => '',
+            'data' => $prepareLog
+        ]);
     }
 
     /**
@@ -106,11 +174,11 @@ class KitchenController
         $sale->save();
 
         // Broadcast to the Waiters
-        broadcast(new StationNotification("waiter.{$waiterId}", [
+        broadcast(new StationNotification("waiter.{$sale->branch_id}", [
             'title' => 'Pesanan Siap Dihidangkan',
             'type' => 'sales',
-            'sales-id' => $salesId,
-            'body' => "Meja {$tableNumber} Lantai {$floorNumber} siap!"
+            'sales-id' => $id,
+            'body' => "Meja {$sale->table->table_number} Lantai {$sale->table->floor_number} siap!"
         ]));
 
         return response()->json([
@@ -118,13 +186,5 @@ class KitchenController
             'msg' => '',
             'data' => $sale
         ]);
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
     }
 }

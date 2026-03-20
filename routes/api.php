@@ -111,6 +111,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('buffet')->group(function () {
         Route::get('/packages', [BuffetController::class, 'index']);
         Route::post('/package', [BuffetController::class, 'storePackage']);
+        Route::get('/orders', [BuffetController::class, 'orders']);
         Route::post('/order', [BuffetController::class, 'storeOrder']);
     });
 
@@ -157,6 +158,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/receive/{id}', [StockController::class, 'receive']);
         Route::get('/card', [StockController::class, 'getStockCard']);
         Route::get('/requests', [StockController::class, 'kitchenRequest']);
+        Route::post('/requests', [StockController::class, 'storeKitchenRequest']);
         Route::post('/requests/approve', [StockController::class, 'approveRequest']);
         Route::post('/requests/reject', [StockController::class, 'rejectRequest']);
         Route::get('/mutation', [StockController::class, 'getStockMutation']);
@@ -178,6 +180,17 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::prefix('kitchen')->group(function () {
         Route::get('/tickets', [KitchenController::class, 'getTickets']);
+        Route::post('/prepare', [KitchenController::class, 'prepare']);
         Route::post('/order/{id}/status', [KitchenController::class, 'updateStatus']);
+        Route::get('/movement', [KitchenController::class, 'approvedRequests']);
+    });
+
+    Route::prefix('report')->group(function () {
+        Route::get('/sales', [SalesController::class, 'getSalesReport']);
+        Route::get('/salesman', [SalesController::class, 'getEmployeeSalesReport']);
+        Route::get('/cancel', [SalesController::class, 'getCancellationReport']);
+        Route::get('/invoice', [SalesController::class, 'getInvoiceReport']);
+        Route::get('/purchase', [PurchasingController::class, 'reportPurchase']);
+        Route::get('/supplier', [PurchasingController::class, 'reportSupplierPurchase']);
     });
 });

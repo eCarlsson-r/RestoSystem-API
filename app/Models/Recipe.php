@@ -23,8 +23,13 @@ class Recipe extends Model
         return $this->belongsTo(Ingredient::class, 'item_code');
     }
 
+    public function prepare()
+    {
+        if ($this->item_type == 'PREP') return $this->belongsTo(Prepare::class, 'item_code');
+    }
+
     public function ingredient()
     {
-        return $this->belongsTo(Ingredient::class, 'item_code');
+        if ($this->item_type == 'INGR') return $this->belongsTo(Ingredient::class, 'item_code');
     }
 }

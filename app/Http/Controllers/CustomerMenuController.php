@@ -3,15 +3,13 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Events\WaiterCalled;
+use Illuminate\Support\Facades\DB;
+use App\Models\Sale;
+use App\Models\SaleRecord;
+use App\Events\StationNotification;
 
 class CustomerMenuController
 {
-    private $notificationService;
-
-    public function __construct(NotificationService $notificationService) {
-        $this->notificationService = $notificationService;
-    }
     public function getMenu($branchCode) {
         $categories = DB::table('category')->get();
         
@@ -31,8 +29,11 @@ class CustomerMenuController
         $table = $request->table;
         $branch = $request->branch;
 
-        // Broadcast the event to the Nuxt POS
-        $this->notificationService->notifyWaiterCalled($table, $branch);
+        broadcast(new StationNotification("waiter.{$waiterId}", [
+            'title' => "Table {$table} called!",
+            'type' => "called",
+            'body' => "Table {$table} has been called."
+        ]));
 
         return response()->json(['message' => 'Staff notified']);
     }

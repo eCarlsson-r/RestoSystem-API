@@ -8,6 +8,7 @@ use App\Models\StockMovement;
 use App\Models\StockMovementRecord;
 use App\Models\KitchenRequest;
 use App\Models\KitchenRequestItem;
+use App\Events\StationNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -33,26 +34,37 @@ class StockController
     }
     
     public function getStockMutation(Request $request) {
-        $branch = $request->branch_code;
-        $storage = $request->storage_code;
-        $start = $request->start_date;
-        $end = $request->end_date . ' 23:59:59';
+        $branch = $request->branch;
+        $storage = $request->storage;
+        $start = $request->start . ' 00:00:00';
+        $end = $request->end . ' 23:59:59';
 
-        // 1. Get all stock items for this branch/storage
-        $stocks = Stock::where('branch_id', $branch)
-            ->where('storage', $storage)
-            ->with(['ingredient', 'utility']) // Eager load names
-            ->get();
+        // 1. Get the relevant stock items
+        $query = Stock::with(['ingredient', 'utility']);
+        
+        if ($branch != 0) {
+            $query->where('branch_id', $branch)->where('storage', $storage);
+        }
 
-        $report = $stocks->map(function($stock) use ($start, $end) {
-            // 2. Opening Balance: Sum of logs BEFORE start date
-            $opening = StockLog::where('stock_id', $stock->id)
+        $stocks = $query->get();
+
+        // 2. Group by item_type and item_code to combine across branches/storages
+        $report = $stocks->groupBy(function($stock) {
+            return $stock->item_type . '-' . $stock->item_code;
+        })->map(function($group) use ($start, $end) {
+            $first = $group->first();
+            // Get all stock IDs for this specific item (can be multiple branches/storages)
+            $stockIds = $group->pluck('id');
+
+            // 3. Sum the logs for ALL stock IDs in this group
+            // Opening Balance: Sum of logs BEFORE start date
+            $opening = StockLog::whereIn('stock_id', $stockIds)
                 ->where('created_at', '<', $start)
                 ->selectRaw('SUM(add_qty - get_qty) as balance')
                 ->value('balance') ?? 0;
 
-            // 3. Activity during period
-            $activity = StockLog::where('stock_id', $stock->id)
+            // Activity during period
+            $activity = StockLog::whereIn('stock_id', $stockIds)
                 ->whereBetween('created_at', [$start, $end])
                 ->selectRaw('SUM(add_qty) as qty_in, SUM(get_qty) as qty_out')
                 ->first();
@@ -61,19 +73,19 @@ class StockController
             $out = $activity->qty_out ?? 0;
 
             return [
-                'item_code' => $stock->item_code,
-                'item_name' => $stock->item_type === 'INGR' 
-                            ? $stock->ingredient->name 
-                            : $stock->utility->name,
+                'item_code' => $first->item_code,
+                'item_name' => $first->item_type === 'INGR' 
+                            ? $first->ingredient->name 
+                            : $first->utility->name,
                 'opening' => (float)$opening,
                 'qty_in'  => (float)$in,
                 'qty_out' => (float)$out,
                 'closing' => (float)($opening + $in - $out),
-                'unit'    => $stock->item_type === 'INGR' 
-                            ? $stock->ingredient->unit 
+                'unit'    => $first->item_type === 'INGR' 
+                            ? $first->ingredient->unit 
                             : 'pcs'
             ];
-        });
+        })->values();
 
         return response()->json([
             'err' => 0,
@@ -158,12 +170,18 @@ class StockController
                 ])->first();
 
                 if ($fromStock) {
-                    $fromStock->decrement('quantity', $record->qty);
+                    $fromStock->decrement('quantity', $record->quantity);
+
+                    $storage = match ($movement->from_storage) {
+                        "KTCN" => "Kitchen",
+                        "BART" => "Bartender",
+                        "MAIN" => "Main Storage"
+                    }; 
                     StockLog::create([
                         'stock_id' => $fromStock->id,
                         'invoice_id' => 'MOV' . str_pad($movement->id, 7, '0', STR_PAD_LEFT),
-                        'description' => 'Moved to ' . $movement->to_branch_id,
-                        'get_qty' => $record->qty,
+                        'description' => 'Moved to ' . $movement->to_branch->name . ' ' . $storage,
+                        'get_qty' => $record->quantity,
                         'date' => now()->toDateString(),
                         'time' => now()->toTimeString(),
                     ]);
@@ -175,14 +193,22 @@ class StockController
                     'item_code' => $record->item_code,
                     'branch_id' => $movement->to_branch_id,
                     'storage' => $movement->to_storage,
+                    'purchase_price' => $fromStock->purchase_price,
+                    'quantity' => 0
                 ]);
 
-                $toStock->increment('quantity', $record->qty);
+                $toStock->increment('quantity', $record->quantity);
+
+                $storage = match ($movement->to_storage) {
+                    "KTCN" => "Kitchen",
+                    "BART" => "Bartender",
+                    "MAIN" => "Main Storage"
+                }; 
                 StockLog::create([
                     'stock_id' => $toStock->id,
                     'invoice_id' => 'MOV' . str_pad($movement->id, 7, '0', STR_PAD_LEFT),
-                    'description' => 'Received from ' . $movement->from_branch_id,
-                    'add_qty' => $record->qty,
+                    'description' => 'Received from ' . $movement->from_branch->name . ' ' . $storage,
+                    'add_qty' => $record->quantity,
                     'date' => now()->toDateString(),
                     'time' => now()->toTimeString(),
                 ]);
@@ -198,24 +224,38 @@ class StockController
     {
         $itemType = $request->input('item_type');
         $itemCode = $request->input('item_code');
+        $branchId = $request->input('branch_id');
+        $storage = $request->input('storage');
         $startDate = $request->input('start');
         $endDate = $request->input('end');
 
-        $stockId = Stock::where([
+        $stock = Stock::where([
             'item_type' => $itemType,
             'item_code' => $itemCode,
-        ])->first()->id;
+            'branch_id' => $branchId,
+            'storage' => $storage
+        ])->first();
+
+        if (!$stock) {
+            return response()->json([
+                'opening_balance' => 0,
+                'closing_balance' => 0,
+                'data' => []
+            ]);
+        }
+        
+        $stockId = $stock->id;
 
         // 1. Calculate the 'Beginning Balance' (Opening Balance)
         // Sum of all (IN - OUT) before the start date
         $openingBalance = StockLog::where('stock_id', $stockId)
-            ->where('created_at', '<', $startDate)
+            ->whereBetween('created_at', [$startDate, $endDate])
             ->selectRaw('SUM(add_qty - get_qty) as balance')
             ->first()->balance ?? 0;
 
         // 2. Fetch the logs for the requested period
         $logs = StockLog::where('stock_id', $stockId)
-            ->whereBetween('created_at', [$startDate, $endDate])
+            ->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate])
             ->orderBy('created_at', 'asc')
             ->get();
 
@@ -251,10 +291,50 @@ class StockController
         ]);
     }
 
+    public function storeKitchenRequest(Request $request) {
+        return DB::transaction(function () use ($request) {
+            // 1. Rename variable to $kitchenRequest to avoid shadowing the incoming $request
+            $kitchenRequest = KitchenRequest::create([
+                'from_branch_id' => $request->from_branch,
+                'from_storage' => $request->from_storage,
+                'to_branch_id' => $request->to_branch,
+                'to_storage' => $request->to_storage,
+                'date' => now()->toDateString(),
+                'time' => now()->toTimeString(),
+                'status' => 'Q',
+            ]);
+
+            // 2. Instead of a manual loop, use the relationship to "execute" the creation
+            // This is the equivalent of your L268-L273 logic
+            $kitchenRequest->items()->createMany($request->items);
+
+            // 3. Update the rest of the function to use $request for input 
+            // and $kitchenRequest for the model instance
+            $fromStorage = match ($request->from_storage) {
+                "KTCN" => "Kitchen",
+                "BART" => "Bartender",
+                "MAIN" => "Main Storage"
+            };
+
+            broadcast(new StationNotification("admin", [
+                'title' => "New Request",
+                'type' => 'request',
+                'request_id' => $kitchenRequest->id,
+                'body' => "New request from {$fromBranch} {$fromStorage}"
+            ]));
+
+            return response()->json([
+                'err' => 0,
+                'msg' => 'Request stored successfully',
+                'data' => $kitchenRequest
+            ]);
+        });
+    }
+
     public function approveRequest(Request $request) {
         $id = $request->id;
         $request = KitchenRequest::with('from_branch', 'to_branch', 'items', 'items.ingredient', 'items.utility')->findOrFail($id);
-        $request->update(['status' => 'R']);
+        $request->update(['status' => 'R', 'respond_date' => now()->toDateString(), 'respond_time' => now()->toTimeString()]);
 
         $movement = StockMovement::create([
             'from_branch_id' => $request->from_branch_id,

@@ -17,64 +17,46 @@ class BuffetController
         return response()->json(['err' => 0, 'data' => $packages]);
     }
 
-    public function storePackage(Request $request)
-    {
-        return DB::transaction(function () use ($request) {
-            $package = Package::updateOrCreate(
-                ['id' => $request->input('package_id')],
-                [
-                    'name' => $request->input('package_name'),
-                    'description' => $request->input('package_desc'),
-                    'price' => $request->input('package_price'),
-                    'type' => 'BUFFET'
-                ]
-            );
+    public function store(Request $request) {
+        $validated = $request->validate([
+            'name' => 'required|string',
+            'price_adult' => 'required|numeric',
+            'price_child' => 'required|numeric',
+            'duration_minutes' => 'required|integer',
+        ]);
 
-            if ($request->has('products')) {
-                PackageProduct::where('package_id', $package->code)->delete();
-                foreach ($request->input('products') as $product) {
-                    PackageProduct::create([
-                        'package_id' => $package->code,
-                        'product_id' => $product['product_id'],
-                        'quantity' => $product['quantity'] ?? 1
-                    ]);
-                }
-            }
-
-            return response()->json(['err' => 0, 'msg' => 'Buffet package saved', 'data' => $package]);
-        });
+        return BuffetPackage::create($validated);
     }
 
-    public function storeOrder(Request $request)
-    {
-        return DB::transaction(function () use ($request) {
-            $sale = Sale::create([
-                'table_number' => $request->table_number,
-                'branch_id' => $request->branch_id,
-                'customer_id' => $request->customer_id,
-                'employee_id' => $request->employee_id,
-                'date' => now()->toDateString(),
-                'time' => now()->toTimeString(),
-                'status' => 'P', // Pending
-                'type' => 'BUFFET'
-            ]);
+    public function startBuffet(Request $request) {
+        $package = BuffetPackage::findOrFail($request->package_id);
+        
+        $sale = Sale::create([
+            'table_id' => $request->table_id,
+            'buffet_package_id' => $package->id,
+            'adult_count' => $request->adult_count,
+            'child_count' => $request->child_count,
+            'buffet_start_at' => now(),
+            'buffet_end_at' => now()->addMinutes($package->duration_minutes),
+            'status' => 'O', // Open
+        ]);
 
-            $packages = $request->input('packages', []);
-            foreach ($packages as $pkg) {
-                SaleRecord::create([
-                    'sale_id' => $sale->id,
-                    'item_id' => $pkg['package_id'], // In legacy, item_id can be product or package
-                    'item_type' => 'PACKAGE',
-                    'quantity' => $pkg['quantity'],
-                    'price' => $pkg['price'],
-                    'discount' => 0,
-                    'employee_id' => $request->employee_id,
-                    'date' => now()->toDateString(),
-                    'time' => now()->toTimeString(),
-                ]);
-            }
+        // Automatically add the "Cover Charge" items to the sales_items
+        $sale->items()->createMany([
+            [
+                'name' => "Buffet Adult ({$package->name})",
+                'quantity' => $request->adult_count,
+                'price' => $package->price_adult,
+                'is_buffet_base' => true
+            ],
+            [
+                'name' => "Buffet Child ({$package->name})",
+                'quantity' => $request->child_count,
+                'price' => $package->price_child,
+                'is_buffet_base' => true
+            ]
+        ]);
 
-            return response()->json(['err' => 0, 'msg' => 'Buffet order created', 'sale_id' => $sale->id]);
-        });
+        return $sale;
     }
 }

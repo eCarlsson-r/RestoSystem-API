@@ -8,7 +8,7 @@ use App\Models\Sale;
 use App\Models\SaleRecord;
 use App\Models\SaleInvoice;
 use App\Models\Table;
-use App\Notifications\SaleConfirmed;
+use App\Events\StationNotification;
 
 class SalesController
 {
@@ -52,6 +52,278 @@ class SalesController
                 'items' => $sale->records->map(fn($r) => $r->product_name)->join(', ')
             ];
         });
+    }
+
+    public function getSalesReport(Request $request) {
+        $start = $request->start;
+        $end = $request->end;
+        $branchId = $request->branch;
+        
+        // 1. Identify if this is a station-specific view (e.g., Kitchen or Bar)
+        $activeStation = $request->station;
+        $user = $request->user();
+        
+        // Auto-detect station for non-Admin users based on username (e.g., BR01_KTCN) or type
+        if (!$activeStation && $user && $user->type !== 'ADMIN') {
+            $parts = explode('_', $user->username);
+            foreach ($parts as $p) {
+                if (in_array(strtoupper($p), ['KTCN', 'BART'])) {
+                    $activeStation = strtoupper($p);
+                    break;
+                }
+            }
+        }
+
+        // Base query for sales in this period/branch
+        if ($branchId != 'ALL') {
+            $salesQuery = Sale::whereBetween('date', [$start, $end])
+                ->where('branch_id', $branchId);
+        } else {
+            $salesQuery = Sale::whereBetween('date', [$start, $end]);
+        }
+
+        // 2. Fetch delivered sales with filtered records
+        $deliveredSalesQuery = (clone $salesQuery)->where('status', 'D');
+        
+        // If station filter is active, only include orders that have items for that station
+        if ($activeStation) {
+            $deliveredSalesQuery->whereHas('records', function($q) use ($activeStation) {
+                $q->where(function($qq) use ($activeStation) {
+                    $qq->whereHas('product.category', fn($cq) => $cq->where('kitchen_process', $activeStation))
+                      ->orWhereHas('package.products.product.category', fn($cq) => $cq->where('kitchen_process', $activeStation));
+                });
+            });
+        }
+
+        $deliveredSales = $deliveredSalesQuery
+            ->with(['records' => function($q) use ($activeStation) {
+                if ($activeStation) {
+                    $q->where(function($qq) use ($activeStation) {
+                        $qq->whereHas('product.category', fn($cq) => $cq->where('kitchen_process', $activeStation))
+                          ->orWhereHas('package.products.product.category', fn($cq) => $cq->where('kitchen_process', $activeStation));
+                    });
+                }
+            }, 'records.product.category', 'records.package'])
+            ->get();
+
+        // 3. Count voided sales (also filtered by station)
+        $voidSalesQuery = (clone $salesQuery)->where('status', 'X');
+        if ($activeStation) {
+            $voidSalesQuery->whereHas('records', function($q) use ($activeStation) {
+                $q->where(function($qq) use ($activeStation) {
+                    $qq->whereHas('product.category', fn($cq) => $cq->where('kitchen_process', $activeStation))
+                      ->orWhereHas('package.products.product.category', fn($cq) => $cq->where('kitchen_process', $activeStation));
+                });
+            });
+        }
+        $voidCount = $voidSalesQuery->count();
+
+        $totalSales = 0; // Gross
+        $totalTax = 0;
+        $allRecords = collect();
+
+        foreach ($deliveredSales as $sale) {
+            $saleGross = $sale->records->sum(fn($r) => $r->quantity * $r->item_price);
+            $totalSales += $saleGross;
+            $totalTax += ($saleGross * ($sale->tax / 100)); // Tax percentage from the Sale model
+            $allRecords = $allRecords->concat($sale->records);
+        }
+
+        // 4. Group items for the table
+        $items = $allRecords->groupBy(function($record) {
+            return $record->item_type . '-' . $record->item_code;
+        })->map(function($group) {
+            $first = $group->first();
+            
+            $name = $first->item_type === 'package' 
+                    ? ($first->package->name ?? 'Package #'.$first->item_code)
+                    : ($first->product->name ?? 'Product #'.$first->item_code);
+
+            return [
+                'name'     => $name,
+                'quantity' => (float)$group->sum('quantity'),
+                'price'    => (float)$first->item_price, 
+                'total'    => (float)$group->sum(function($r) { 
+                    return $r->quantity * $r->item_price; 
+                })
+            ];
+        })->values();
+
+        return response()->json([
+            'err' => 0,
+            'msg' => $activeStation ? "Station Filter: $activeStation" : '',
+            'data' => [
+                'items' => $items,
+                'summary' => [
+                    'total_sales' => $totalSales,
+                    'total_tax'   => $totalTax,
+                    'net_revenue' => $totalSales - $totalTax,
+                    'void_count'  => $voidCount,
+                    'total_items' => $items->sum('quantity')
+                ]
+            ]
+        ]);
+    }
+
+    public function getEmployeeSalesReport(Request $request) {
+        $start = $request->start;
+        $end = $request->end;
+        $branchId = $request->branch;
+        $employeeId = $request->employee_id;
+        
+        $user = $request->user();
+        
+        // Base query for sales in this period/branch
+        if ($branchId != 'ALL') {
+            $salesQuery = Sale::whereBetween('date', [$start, $end])
+                ->where('branch_id', $branchId);
+        } else {
+            $salesQuery = Sale::whereBetween('date', [$start, $end]);
+        }
+
+        if ($employeeId && $employeeId != 'ALL') {
+            $salesQuery->where('employee_id', $employeeId);
+        }
+
+        // 2. Fetch delivered sales with filtered records
+        $deliveredSalesQuery = (clone $salesQuery)->where('status', 'D');
+        
+        $deliveredSales = $deliveredSalesQuery
+            ->with(['records', 'records.product.category', 'records.package'])
+            ->get();
+
+        // 3. Count voided sales (also filtered by station)
+        $voidSalesQuery = (clone $salesQuery)->where('status', 'X');
+        $voidCount = $voidSalesQuery->count();
+
+        $totalSales = 0; // Gross
+        $totalTax = 0;
+        $allRecords = collect();
+
+        foreach ($deliveredSales as $sale) {
+            $saleGross = $sale->records->sum(fn($r) => $r->quantity * $r->item_price);
+            $totalSales += $saleGross;
+            $totalTax += ($saleGross * ($sale->tax / 100)); // Tax percentage from the Sale model
+            $allRecords = $allRecords->concat($sale->records);
+        }
+
+        // 4. Group items for the table
+        $items = $allRecords->groupBy(function($record) {
+            return $record->item_type . '-' . $record->item_code;
+        })->map(function($group) {
+            $first = $group->first();
+            
+            $name = $first->item_type === 'package' 
+                    ? ($first->package->name ?? 'Package #'.$first->item_code)
+                    : ($first->product->name ?? 'Product #'.$first->item_code);
+
+            return [
+                'name'     => $name,
+                'quantity' => (float)$group->sum('quantity'),
+                'price'    => (float)$first->item_price, 
+                'total'    => (float)$group->sum(function($r) { 
+                    return $r->quantity * $r->item_price; 
+                })
+            ];
+        })->values();
+
+        return response()->json([
+            'err' => 0,
+            'msg' => '',
+            'data' => [
+                'items' => $items,
+                'summary' => [
+                    'total_sales' => $totalSales,
+                    'total_tax'   => $totalTax,
+                    'net_revenue' => $totalSales - $totalTax,
+                    'void_count'  => $voidCount,
+                    'total_items' => $items->sum('quantity')
+                ]
+            ]
+        ]);
+    }
+
+    public function getInvoiceReport(Request $request) {
+        $start = $request->start;
+        $end = $request->end;
+        $branchId = $request->branch;
+
+        // 1. Fetch sales with related records and invoices
+        $salesQuery = Sale::whereBetween('date', [$start, $end])
+            ->where('status', 'D')
+            ->when($branchId != 'ALL', fn($q) => $q->where('branch_id', $branchId));
+
+        $sales = $salesQuery->with(['records', 'invoices'])->get();
+
+        // 2. Group by date and calculate daily aggregates
+        $reportData = $sales->groupBy('date')->map(function ($daySales, $date) {
+            $dailySubtotal = 0;
+            $dailyDiscount = 0;
+            $dailyTax = 0;
+            $dailyTotal = 0;
+
+            $payments = [
+                'cash' => 0,
+                'credit-card' => 0,
+                'debit-card' => 0,
+                'ovo' => 0,
+                'go-pay' => 0,
+                'total-payment' => 0
+            ];
+
+            foreach ($daySales as $sale) {
+                // Calculate Sale Totals
+                $saleGross = $sale->records->sum(fn($r) => $r->quantity * $r->item_price);
+                $saleDiscount = $saleGross * ($sale->discount / 100);
+                $saleAfterDiscount = $saleGross - $saleDiscount;
+                $saleTax = $saleAfterDiscount * ($sale->tax / 100);
+                $saleFinal = $saleAfterDiscount + $saleTax;
+
+                $dailySubtotal += $saleGross;
+                $dailyDiscount += $saleDiscount;
+                $dailyTax += $saleTax;
+                $dailyTotal += $saleFinal;
+
+                // Categorize Payments
+                foreach ($sale->invoices as $invoice) {
+                    $amount = (float)($invoice->pay_amount - $invoice->pay_change);
+                    $payments['total-payment'] += $amount;
+
+                    if ($invoice->pay_method === 'CASH') {
+                        $payments['cash'] += $amount;
+                    } else if ($invoice->pay_method === 'QRIS') {
+                        $payments['qris'] += $amount;
+                    } else if ($invoice->pay_method === 'VOUCHER') {
+                        $payments['voucher'] += $amount;
+                    } else {
+                        $bank = strtoupper($invoice->pay_bank ?? '');
+                        $cardType = strtoupper($invoice->card_type ?? '');
+
+                        if ($cardType === 'CR') {
+                            $payments['credit-card'] += $amount;
+                        } else {
+                            $payments['debit-card'] += $amount;
+                        }
+                    }
+                }
+            }
+
+            return array_merge([
+                'date' => $date,
+                'subtotal' => $dailySubtotal,
+                'discount' => $dailyDiscount,
+                'tax' => $dailyTax,
+                'total-price' => $dailyTotal
+            ], $payments);
+        })->values();
+
+        return response()->json([
+            'err' => 0,
+            'msg' => '',
+            'data' => [
+                'items' => $reportData
+            ]
+        ]);
     }
 
     /**

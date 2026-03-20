@@ -4,18 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\Recipe;
-use App\Services\NotificationService;
+use App\Events\StationNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class ProductController
-{
-    private $notificationService;
-
-    public function __construct(NotificationService $notificationService) {
-        $this->notificationService = $notificationService;
-    }
-    
+{   
     public function index(Request $request)
     {
         $query = Product::with(['category', 'recipe.item', 'files']);
@@ -47,7 +41,12 @@ class ProductController
         $product->soldout = $request->soldout;
         $product->save();
 
-        $this->notificationService->notifyProductStatusChanged($product->id, $product->soldout);
+        broadcast(new StationNotification("waiter.{$waiterId}", [
+            'title' => "Product {$productId} status changed!",
+            'type' => $soldout ? 'soldout' : 'available',
+            'product_id' => $productId,
+            'body' => "Product {$productId} has been changed to " . ($soldout ? 'Sold Out' : 'Available')
+        ]));
 
         return response()->json([
             'err' => 0,
