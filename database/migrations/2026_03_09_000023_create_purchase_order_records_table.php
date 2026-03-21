@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('purchase_order_records', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('purchase_order_id')->constrained('purchase_orders')->onDelete('cascade');
+            $table->foreignId('purchase_order_id')->constrained('purchase_orders')->onUpdate('cascade')->onDelete('cascade');
             $table->string('item_type', 4);
             $table->string('item_code', 10);
             $table->integer('quantity');

@@ -7,9 +7,24 @@ use Illuminate\Http\Request;
 
 class CustomerController
 {
-    public function index()
+    public function index(Request $request)
     {
-        return Customer::all();
+        $query = $request->get('q');
+
+        // If no query, return empty or recent customers
+        if (!$query) {
+            return Customer::all();
+        }
+
+        $customers = Customer::query()
+            ->where('name', 'LIKE', "%{$query}%")
+            ->orWhere('mobile', 'LIKE', "%{$query}%")
+            ->orWhere('email', 'LIKE', "%{$query}%")
+            ->select('id', 'name', 'mobile', 'discount') // Only return what the UI needs
+            ->limit(10)
+            ->get();
+
+        return response()->json($customers);
     }
 
     public function store(Request $request)

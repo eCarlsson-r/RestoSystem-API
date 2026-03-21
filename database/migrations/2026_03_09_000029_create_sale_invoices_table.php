@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('sale_invoices', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('sale_id')->constrained('sales')->onDelete('cascade');
+            $table->foreignId('sale_id')->constrained('sales')->onUpdate('cascade')->onDelete('cascade');
             $table->string('pay_method', 2)->nullable();
             $table->string('pay_bank', 50)->nullable();
             $table->string('pay_card', 20)->nullable();

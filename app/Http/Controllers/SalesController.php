@@ -8,6 +8,11 @@ use App\Models\Sale;
 use App\Models\SaleRecord;
 use App\Models\SaleInvoice;
 use App\Models\Table;
+use App\Models\Branch;
+use App\Models\Employee;
+use App\Models\Customer;
+use App\Models\Package;
+use App\Models\Product;
 use App\Events\StationNotification;
 
 class SalesController
@@ -28,30 +33,99 @@ class SalesController
     }
 
     public function getActiveCaptainOrder($salesId) {
-        return Sale::find($salesId)->with('table', 'records.product', 'records.package')->get();
+        return response()->json([
+            'err' => 0,
+            'msg' => '',
+            'data' => Sale::where('id', $salesId)->with('table', 'records.product', 'records.package')->get()
+        ]);
     }
     
     public function getCancellationReport(Request $request) {
         $start = $request->start_date;
         $end = $request->end_date . ' 23:59:59';
+        $branchId = $request->branch_id;
+        
+        // 1. Identify if this is a station-specific view (e.g., Kitchen or Bar)
+        $activeStation = $request->station;
+        $user = $request->user();
+        
+        // Auto-detect station for non-Admin users
+        if (!$activeStation && $user && $user->type !== 'ADMIN') {
+            $parts = explode('_', $user->username);
+            foreach ($parts as $p) {
+                if (in_array(strtoupper($p), ['KTCN', 'BART'])) {
+                    $activeStation = strtoupper($p);
+                    break;
+                }
+            }
+        }
 
-        $voids = Sale::where('branch_id', $request->branch_id)
-            ->whereBetween('date', [$start, $end])
-            ->whereIn('status', ['X'])
-            ->with(['employee', 'records'])
-            ->get();
+        // 2. Query voided items (status 'X') instead of just voided sales
+        $query = SaleRecord::where('item_status', 'X')
+            ->whereHas('sale', function($q) use ($branchId, $start, $end) {
+                if ($branchId && $branchId !== 'ALL') {
+                    $q->where('branch_id', $branchId);
+                }
+                $q->whereBetween('date', [$start, $end]);
+            })
+            ->with(['sale.branch', 'sale.employee', 'product.category', 'package']);
 
-        return $voids->map(function($sale) {
-            return [
-                'invoice' => $sale->sales_invoice,
-                'time' => $sale->created_at->format('H:i'),
-                'waiter' => $sale->employee->name,
-                'authorized_by' => $sale->supervisor->name ?? 'N/A',
-                'reason' => $sale->cancel_reason,
-                'total_lost' => (float)$sale->total_final,
-                'items' => $sale->records->map(fn($r) => $r->product_name)->join(', ')
-            ];
+        // 3. Apply the station filter (Legacy style: c.kitchen-process OR empty item-code)
+        if ($activeStation && ($activeStation == "KTCN" || $activeStation == "BART")) {
+            $query->where(function($q) use ($activeStation) {
+                $q->whereHas('product.category', fn($cq) => $cq->where('kitchen_process', $activeStation))
+                  ->orWhereHas('package.products.product.category', fn($cq) => $cq->where('kitchen_process', $activeStation))
+                  ->orWhere('item_code', ''); 
+            });
+        }
+
+        $records = $query->get();
+
+        // 4. Group by sale, item, and discount to match legacy SQL "GROUP BY r.item-code, r.discount-pcnt, s.sales-discount"
+        $grouped = $records->groupBy(function($record) {
+            return $record->sale_id . '-' . $record->item_code . '-' . $record->discount_pcnt;
         });
+
+        // 5. Map to the exact 12 columns from legacy SQL
+        $items = $grouped->map(function($group) {
+            $first = $group->first();
+            $sale = $first->sale;
+            $name = $first->item_type === 'package' 
+                    ? ($first->package->name ?? 'Package #'.$first->item_code)
+                    : ($first->product->name ?? 'Product #'.$first->item_code);
+
+            $quantity = $group->sum('quantity');
+            $discountMult = (100 - ($first->discount_pcnt ?? 0)) / 100;
+            $totalPrice = ($first->item_price * $discountMult) * $quantity;
+
+            return [
+                'sales_id' => $sale->id,
+                'date' => $sale->date,
+                'tax' => (float)$sale->tax,
+                'discount' => (float)$sale->discount,
+                'branch_name' => $sale->branch->name ?? 'N/A',
+                'item_code' => $first->item_code,
+                'item_name' => $name,
+                'quantity' => (float)$quantity,
+                'item_price' => (float)$first->item_price,
+                'discount_percent' => (float)$first->discount_pcnt,
+                'discount_amount' => (float)$first->discount_amount,
+                'total_price' => (float)round($totalPrice)
+            ];
+        })->values();
+
+        return response()->json([
+            'err' => 0,
+            'msg' => '',
+            'data' => [
+                'items' => $items,
+                'summary' => [
+                    'total_lost' => $items->sum('total-price'),
+                    'total_items' => $items->sum('quantity'),
+                    'void_count' => $items->count()
+                ]
+            ]
+        ]);
     }
 
     public function getSalesReport(Request $request) {
@@ -351,31 +425,20 @@ class SalesController
                 Table::findOrFail($request->input('table_id'))->update(['status' => 'occupied']);
             }
 
-            // 2. Add the items (The "Incremental" part)
-            $kitchenItems = 0;
-            $barItems = 0;
-
             foreach ($request->items as $item) {
                 // Note: Each item in the loop is a single sales-record
                 SaleRecord::create([
                     'sale_id' => $salesId,
                     'item_type' => $item['item_type'], // product or package
-                    'item-code' => $item['item_code'],
-                    'item_note' => $item['item_note'] ?? '',
+                    'item_code' => $item['item_code'],
+                    'quantity' => $item['quantity'],
+                    'item_price' => $item['item_price'],
                     'item_status' => 'O',
-                    'item_price' => $item['price'],
-                    'order_employee' => $request->user()->id
+                    'item_note' => $item['item_note'] ?? '',
+                    'order_employee' => $request->user()->employee->id
                 ]);
-
-                // Check routing for notifications
-                if ($item['kitchen_process'] === 'KTCN') $kitchenItems++;
-                if ($item['kitchen_process'] === 'BART') $barItems++;
             }
-
-            // 3. Trigger Notifications (Laravel Reverb or WebPush)
-            // This is where you notify the KDS we built earlier
-            $this->notifyStations($branch, $kitchenItems, $barItems, $salesId);
-
+            
             return response()->json([
                 'status' => 'success', 
                 'sale_id' => $salesId
@@ -388,7 +451,7 @@ class SalesController
      */
     public function show(string $id)
     {
-        return Sale::with('branch', 'employee', 'customer', 'records.product', 'records.package')->findOrFail($id);
+        return Sale::with('branch', 'employee', 'customer', 'buffet.products', 'records.product', 'records.package')->findOrFail($id);
     }
     
     public function checkout(Request $request) {

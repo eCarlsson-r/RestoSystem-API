@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('kitchen_request_items', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('request_id')->constrained('kitchen_requests')->onDelete('cascade');
+            $table->foreignId('request_id')->constrained('kitchen_requests')->onUpdate('cascade')->onDelete('cascade');
             $table->string('item_type', 4);
             $table->string('item_code', 5);
             $table->integer('quantity');

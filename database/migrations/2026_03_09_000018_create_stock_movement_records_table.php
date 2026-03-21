@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('stock_movement_records', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('movement_id')->constrained('stock_movements')->onDelete('cascade');
+            $table->foreignId('movement_id')->constrained('stock_movements')->onUpdate('cascade')->onDelete('cascade');
             $table->string('item_type', 4);
             $table->string('item_code', 10);
             $table->integer('quantity');

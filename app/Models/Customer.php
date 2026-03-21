@@ -10,4 +10,14 @@ class Customer extends Model
         'name', 'gender', 'pob', 'dob', 'address', 
         'mobile', 'email', 'discount', 'tax', 'account_id'
     ];
+
+    protected $guarded = ['id'];
+
+    public function sales() {
+        return $this->hasMany(Sale::class);
+    }
+
+    public function reservations() {
+        return $this->hasMany(Reservation::class);
+    }
 }

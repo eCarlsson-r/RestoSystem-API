@@ -18,6 +18,7 @@ use App\Http\Controllers\PackageController;
 use App\Http\Controllers\IngredientController;
 use App\Http\Controllers\UtilityController;
 use App\Http\Controllers\BuffetController;
+use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\StockController;
@@ -109,10 +110,17 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::prefix('buffet')->group(function () {
-        Route::get('/packages', [BuffetController::class, 'index']);
-        Route::post('/package', [BuffetController::class, 'storePackage']);
-        Route::get('/orders', [BuffetController::class, 'orders']);
-        Route::post('/order', [BuffetController::class, 'storeOrder']);
+        Route::get('/', [BuffetController::class, 'index']);
+        Route::post('/', [BuffetController::class, 'store']);
+        Route::post('/{id}/sync-items', [BuffetController::class, 'syncItems']);
+        Route::delete('/{id}', [BuffetController::class, 'destroy']);
+        Route::delete('/image/{id}', [FileController::class, 'destroy']);
+    });
+
+    Route::prefix('reservations')->group(function () {
+        Route::get('/', [ReservationController::class, 'index']);
+        Route::post('/', [ReservationController::class, 'store']);
+        Route::post('/{id}/check-in', [ReservationController::class, 'checkIn']);
     });
 
     Route::prefix('notifications')->group(function () {

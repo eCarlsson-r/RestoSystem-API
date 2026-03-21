@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('notification_subscriptions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('user_id')->constrained('users')->onUpdate('cascade')->onDelete('cascade');
             $table->string('endpoint', 500);
             $table->binary('public_key');
             $table->binary('auth_token');

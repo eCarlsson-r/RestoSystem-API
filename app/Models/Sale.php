@@ -8,8 +8,15 @@ class Sale extends Model
 {
     protected $fillable = [
         'branch_id', 'table_id', 'employee_id', 'customer_id', 
-        'date', 'time', 'discount', 'tax', 'status'
+        'buffet_id', 'adult_count', 'child_count',
+        'adult_price', 'child_price', 'duration_minutes', 
+        'reservation_id', 'date', 'time', 'discount', 'tax', 'status'
     ];
+
+    public function buffet()
+    {
+        return $this->belongsTo(Buffet::class);
+    }
 
     public function invoices()
     {
@@ -39,5 +46,9 @@ class Sale extends Model
     public function records()
     {
         return $this->hasMany(SaleRecord::class, 'sale_id');
+    }
+
+    public function reservation() {
+        return $this->hasOne(Reservation::class);
     }
 }
