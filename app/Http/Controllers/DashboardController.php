@@ -7,11 +7,20 @@ use App\Models\SaleInvoice;
 use App\Models\SaleRecord;
 use App\Models\Employee;
 use App\Models\Product;
+use App\Models\Branch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController
 {
+    public function landingPage()
+    {
+        return response()->json([
+            'branches' => Branch::where('is_active', true)->get(),
+            'featured_products' => Product::featured()->limit(6)->get(),
+        ]);
+    }
+
     public function index()
     {
         $date = now();

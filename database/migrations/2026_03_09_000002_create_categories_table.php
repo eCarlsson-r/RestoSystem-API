@@ -11,6 +11,8 @@ return new class extends Migration
         Schema::create('categories', function (Blueprint $table) {
             $table->id();
             $table->string('name', 100);
+            $table->string('slug')->unique();
+            $table->string('icon_name', 50)->default('utensils');
             $table->string('kitchen_process', 4);
             $table->string('description', 500);
             $table->timestamps();

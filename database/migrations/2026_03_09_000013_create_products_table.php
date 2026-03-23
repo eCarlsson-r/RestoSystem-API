@@ -11,12 +11,12 @@ return new class extends Migration
         Schema::create('products', function (Blueprint $table) {
             $table->id();
             $table->string('name', 100);
+            $table->boolean('is_featured')->default(false);
             $table->string('description', 200)->nullable();
             $table->foreignId('category_id')->constrained('categories')->onUpdate('cascade')->onDelete('cascade');
             $table->integer('price');
             $table->integer('cost');
             $table->tinyInteger('discount')->default(0);
-            $table->tinyInteger('soldout')->default(0);
             $table->timestamps();
         });
     }

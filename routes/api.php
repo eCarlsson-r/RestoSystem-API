@@ -25,6 +25,20 @@ use App\Http\Controllers\StockController;
 use App\Http\Controllers\PrepareController;
 use Illuminate\Support\Facades\Route;
 
+Route::prefix('public')->group(function () {
+    Route::get('/home', [DashboardController::class, 'landingPage']);
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::get('/branches', [BranchController::class, 'index']);
+    Route::get('/branches/{slug}/categories', [BranchController::class, 'getBranchCategories']);
+    Route::get('/categories/{branchSlug}/{categorySlug}/products', [CategoryController::class, 'getCategoryProducts']);
+    Route::get('/products', [ProductController::class, 'index']);
+    Route::get('/packages', [PackageController::class, 'index']);
+    Route::get('/buffets', [BuffetController::class, 'index']);
+    Route::get('/categories', [CategoryController::class, 'index']);
+});
+
+
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {

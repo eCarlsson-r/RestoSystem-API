@@ -17,7 +17,7 @@ class ProductSeeder extends Seeder
                 'price' => 5000,
                 'cost' => 600,
                 'discount' => 0,
-                'soldout' => 0,
+                'is_featured' => false,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -28,7 +28,7 @@ class ProductSeeder extends Seeder
                 'price' => 25000,
                 'cost' => 8000,
                 'discount' => 0,
-                'soldout' => 0,
+                'is_featured' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -39,7 +39,7 @@ class ProductSeeder extends Seeder
                 'price' => 22000,
                 'cost' => 7000,
                 'discount' => 0,
-                'soldout' => 0,
+                'is_featured' => false,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -50,7 +50,7 @@ class ProductSeeder extends Seeder
                 'price' => 28000,
                 'cost' => 9000,
                 'discount' => 0,
-                'soldout' => 0,
+                'is_featured' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -61,7 +61,8 @@ class ProductSeeder extends Seeder
                 'price' => 45000,
                 'cost' => 25000,
                 'discount' => 0,
-                'soldout' => 0,
+                'is_featured' => true,
+                'is_featured' => false,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -72,7 +73,7 @@ class ProductSeeder extends Seeder
                 'price' => 35000,
                 'cost' => 18000,
                 'discount' => 0,
-                'soldout' => 0,
+                'is_featured' => false,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -83,7 +84,8 @@ class ProductSeeder extends Seeder
                 'price' => 20000,
                 'cost' => 10000,
                 'discount' => 0,
-                'soldout' => 0,
+                'is_featured' => true,
+                'is_featured' => false,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -94,7 +96,7 @@ class ProductSeeder extends Seeder
                 'price' => 8000,
                 'cost' => 1000,
                 'discount' => 0,
-                'soldout' => 0,
+                'is_featured' => false,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -105,7 +107,7 @@ class ProductSeeder extends Seeder
                 'price' => 12000,
                 'cost' => 2000,
                 'discount' => 0,
-                'soldout' => 0,
+                'is_featured' => false,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -116,7 +118,7 @@ class ProductSeeder extends Seeder
                 'price' => 15000,
                 'cost' => 5000,
                 'discount' => 0,
-                'soldout' => 0,
+                'is_featured' => false,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -127,9 +129,68 @@ class ProductSeeder extends Seeder
                 'price' => 25000,
                 'cost' => 10000,
                 'discount' => 0,
-                'soldout' => 0,
+                'is_featured' => true,
+                'is_featured' => false,
                 'created_at' => now(),
                 'updated_at' => now(),
+            ],
+        ]);
+
+        DB::table('branch_product')->insert([
+            [
+                'branch_id' => 1,
+                'product_id' => 1,
+                'is_active' => true
+            ],
+            [
+                'branch_id' => 1,
+                'product_id' => 2,
+                'is_active' => true
+            ],
+            [
+                'branch_id' => 1,
+                'product_id' => 3,
+                'is_active' => true
+            ],
+            [
+                'branch_id' => 1,
+                'product_id' => 4,
+                'is_active' => true
+            ],
+            [
+                'branch_id' => 1,
+                'product_id' => 5,
+                'is_active' => true
+            ],
+            [
+                'branch_id' => 1,
+                'product_id' => 6,
+                'is_active' => true
+            ],
+            [
+                'branch_id' => 1,
+                'product_id' => 7,
+                'is_active' => true
+            ],
+            [
+                'branch_id' => 1,
+                'product_id' => 8,
+                'is_active' => true
+            ],
+            [
+                'branch_id' => 1,
+                'product_id' => 9,
+                'is_active' => true
+            ],
+            [
+                'branch_id' => 1,
+                'product_id' => 10,
+                'is_active' => true
+            ],
+            [
+                'branch_id' => 1,
+                'product_id' => 11,
+                'is_active' => true
             ],
         ]);
     }

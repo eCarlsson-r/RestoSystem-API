@@ -39,6 +39,23 @@ class SalesController
             'data' => Sale::where('id', $salesId)->with('table', 'records.product', 'records.package')->get()
         ]);
     }
+
+    // app/Http/Controllers/Api/OrderController.php
+    public function getActiveSession($tableId) {
+        $sale = Sale::where('table_id', $tableId)
+                    ->where('status', 'O')
+                    ->with('reservation.buffet')
+                    ->first();
+
+        $isBuffetActive = $sale && $sale->buffet_start_at && now()->between($sale->buffet_start_at, $sale->buffet_end_at);
+
+        return response()->json([
+            'sale_id' => $sale?->id,
+            'is_buffet' => $isBuffetActive,
+            'buffet_tier' => $sale?->reservation?->buffet?->name,
+            'remaining_minutes' => $isBuffetActive ? now()->diffInMinutes($sale->buffet_end_at) : 0
+        ]);
+    }
     
     public function getCancellationReport(Request $request) {
         $start = $request->start_date;

@@ -13,6 +13,8 @@ class CategorySeeder extends Seeder
             [
                 'id' => 1, // NO -> 1
                 'name' => 'Mie',
+                'slug' => 'mie',
+                'icon_name' => 'utensils',
                 'kitchen_process' => 'KTCN',
                 'description' => 'Aneka ragam hidangan olahan mie',
                 'created_at' => now(),
@@ -21,6 +23,8 @@ class CategorySeeder extends Seeder
             [
                 'id' => 2,
                 'name' => 'Nasi',
+                'slug' => 'nasi',
+                'icon_name' => 'utensils',
                 'kitchen_process' => 'KTCN',
                 'description' => 'Aneka hidangan olahan nasi',
                 'created_at' => now(),
@@ -29,6 +33,8 @@ class CategorySeeder extends Seeder
             [
                 'id' => 3,
                 'name' => 'Daging',
+                'slug' => 'daging',
+                'icon_name' => 'beef',
                 'kitchen_process' => 'KTCN',
                 'description' => 'Berbagai pilihan daging grill dan shabu',
                 'created_at' => now(),
@@ -37,6 +43,8 @@ class CategorySeeder extends Seeder
             [
                 'id' => 4,
                 'name' => 'Minuman',
+                'slug' => 'minuman',
+                'icon_name' => 'drink',
                 'kitchen_process' => 'BAR',
                 'description' => 'Minuman dingin dan panas',
                 'created_at' => now(),
@@ -45,6 +53,8 @@ class CategorySeeder extends Seeder
             [
                 'id' => 5,
                 'name' => 'Snack',
+                'slug' => 'snack',
+                'icon_name' => 'popcorn',
                 'kitchen_process' => 'KTCN',
                 'description' => 'Camilan dan hidangan penutup',
                 'created_at' => now(),

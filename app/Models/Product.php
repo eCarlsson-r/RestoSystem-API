@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
 {
-    protected $fillable = ['name', 'description', 'category_id', 'price', 'cost', 'discount', 'soldout'];
+    protected $fillable = ['name', 'description', 'category_id', 'price', 'cost', 'discount'];
 
     public function category()
     {
@@ -21,5 +21,15 @@ class Product extends Model
     public function files()
     {
         return $this->morphMany(File::class, 'model');
+    }
+
+    public function branches()
+    {
+        return $this->belongsToMany(Branch::class)->withPivot('is_active')->withTimestamps();
+    }
+
+    public function scopeFeatured($query)
+    {
+        return $query->where('is_featured', true);
     }
 }

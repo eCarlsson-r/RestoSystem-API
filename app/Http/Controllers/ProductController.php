@@ -37,9 +37,17 @@ class ProductController
 
     public function toggleSoldOut(Request $request, $id)
     {
-        $product = Product::findOrFail($id);
-        $product->soldout = $request->soldout;
-        $product->save();
+        // 1. Get the current branch from the authenticated waiter/staff
+        $branchId = auth()->user()->branch_id; 
+        $productId = $id;
+        $isSoldOut = $request->soldout; // true or false
+
+        // 2. Update the Pivot Table instead of the Product table
+        // syncWithoutDetaching ensures we don't remove other branches
+        $product = Product::findOrFail($productId);
+        $product->branches()->updateExistingPivot($branchId, [
+            'is_active' => !$isSoldOut 
+        ]);
 
         broadcast(new StationNotification("waiter.{$waiterId}", [
             'title' => "Product {$productId} status changed!",

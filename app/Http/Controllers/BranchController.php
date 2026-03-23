@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Branch;
+use App\Models\Category;
 use App\Models\Table;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -13,6 +14,27 @@ class BranchController
     public function index(Request $request)
     {
         return response()->json(['err' => 0, 'msg' => 'Branches fetched successfully', 'data' => Branch::with('files')->get()]);
+    }
+
+    public function getBranchCategories($branchSlug)
+    {
+        $branch = Branch::where('slug', $branchSlug)->firstOrFail();
+
+        // Fetch categories that have at least one product active in THIS branch
+        $categories = Category::whereHas('products', function($query) use ($branch) {
+            $query->whereHas('branches', function($bQuery) use ($branch) {
+                $bQuery->where('branches.id', $branch->id)
+                    ->where('branch_product.is_active', true);
+            });
+        })->get(['id', 'name', 'slug', 'icon_name']);
+
+        return response()->json([
+            'branch' => [
+                'name' => $branch->name,
+                'address' => $branch->address
+            ],
+            'categories' => $categories
+        ]);
     }
 
     public function store(Request $request)

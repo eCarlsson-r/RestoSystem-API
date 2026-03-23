@@ -7,8 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 class Branch extends Model
 {
     protected $fillable = [
-        'name', 'address', 'phone', 
-        'floor_number', 'kitchen_no', 'bartender_no'
+        'name', 'slug', 'address', 'city', 'phone', 
+        'floor_number', 'kitchen_no', 'bartender_no', 'is_active'
     ];
 
     protected $guarded = ['id'];
@@ -31,6 +31,16 @@ class Branch extends Model
     public function bar()
     {
         return $this->hasMany(Bar::class);
+    }
+
+    public function products()
+    {
+        return $this->belongsToMany(Product::class)->withPivot('is_active')->withTimestamps();
+    }
+
+    public function getTotalCapacityAttribute()
+    {
+        return $this->tables()->sum('capacity');
     }
 
     public function files()
