@@ -37,6 +37,17 @@ class BranchController
         ]);
     }
 
+    public function getBranchBuffets($slug)
+    {
+        $branch = Branch::where('slug', $slug)->firstOrFail();
+
+        // Get all buffets assigned to this branch
+        return $branch->buffets()
+            ->with('products:id,name,price') // We only need basic product info for the whitelist
+            ->where('is_active', true)
+            ->get();
+    }
+
     public function store(Request $request)
     {
         return DB::transaction(function () use ($request) {

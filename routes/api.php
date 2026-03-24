@@ -23,28 +23,31 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\PrepareController;
+use App\Http\Controllers\OrderController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('public')->group(function () {
     Route::get('/home', [DashboardController::class, 'landingPage']);
-    Route::post('/login', [AuthController::class, 'login']);
-    Route::post('/register', [AuthController::class, 'register']);
     Route::get('/branches', [BranchController::class, 'index']);
     Route::get('/branches/{slug}/categories', [BranchController::class, 'getBranchCategories']);
+    Route::get('/branches/{slug}/buffets', [BranchController::class, 'getBranchBuffets']);
     Route::get('/categories/{branchSlug}/{categorySlug}/products', [CategoryController::class, 'getCategoryProducts']);
     Route::get('/products', [ProductController::class, 'index']);
     Route::get('/packages', [PackageController::class, 'index']);
     Route::get('/buffets', [BuffetController::class, 'index']);
     Route::get('/categories', [CategoryController::class, 'index']);
+    Route::post('/call-waiter', [OrderController::class, 'callWaiter']);
 });
 
-
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/register', [AuthController::class, 'register']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user-profile', [AuthController::class, 'userProfile']);
     Route::get('/dashboard', [DashboardController::class, 'index']);
+    Route::get('/user/history', [CustomerController::class, 'history']);
+    Route::post('/orders', [OrderController::class, 'store']);
 
     Route::prefix('tables')->group(function () {
         Route::get('/', [TableController::class, 'index']);

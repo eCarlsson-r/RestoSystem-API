@@ -6,9 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Customer extends Model
 {
+    const POINT_RATIO = 1000; // 1 Point for every Rp 1,000 spent
+
     protected $fillable = [
-        'name', 'gender', 'pob', 'dob', 'address', 
-        'mobile', 'email', 'discount', 'tax', 'account_id'
+        'name', 'gender', 'pob', 'dob', 'address', 'points',
+        'mobile', 'email', 'discount', 'tax', 'user_id'
     ];
 
     protected $guarded = ['id'];
@@ -17,6 +19,11 @@ class Customer extends Model
         'is_birthday_today' => 'boolean',
         'dob' => 'date',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 
     /**
      * Determine if today is the customer's birthday.
@@ -54,7 +61,11 @@ class Customer extends Model
         return $this->hasMany(Reservation::class);
     }
 
-    // app/Models/Customer.php
+    // Helper to calculate value
+    public function getPointsValueAttribute() {
+        return $this->points * 1; // Assuming 1 point = Rp 1
+    }
+
     public function getTierAttribute() {
         if ($this->points >= 5000) return 'DIAMOND';
         if ($this->points >= 2000) return 'GOLD';

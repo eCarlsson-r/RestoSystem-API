@@ -12,6 +12,10 @@ class Buffet extends Model
 
     protected $guarded = ['id'];
 
+    public function branches() {
+        return $this->belongsToMany(Branch::class, 'branch_buffet');
+    }
+
     public function products()
     {
         return $this->belongsToMany(Product::class, 'buffet_items');

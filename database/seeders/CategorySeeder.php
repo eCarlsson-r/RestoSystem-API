@@ -44,7 +44,7 @@ class CategorySeeder extends Seeder
                 'id' => 4,
                 'name' => 'Minuman',
                 'slug' => 'minuman',
-                'icon_name' => 'drink',
+                'icon_name' => 'cup-soda',
                 'kitchen_process' => 'BAR',
                 'description' => 'Minuman dingin dan panas',
                 'created_at' => now(),

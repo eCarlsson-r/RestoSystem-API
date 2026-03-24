@@ -102,4 +102,30 @@ class ReservationController
             'sale_id' => $sale->id
         ]);
     }
+
+    public function claimBirthday(Request $request) {
+        $customer = $request->user()->customer;
+
+        if (!$customer->can_claim_birthday_buffet) {
+            return response()->json(['err' => 1, 'msg' => 'Not eligible'], 403);
+        }
+
+        // Find the active sale for today
+        $activeSale = $customer->sales()
+            ->where('date', now()->format('Y-m-d'))
+            ->where('status', '!=', 'C') // Not closed yet
+            ->first();
+
+        if ($activeSale) {
+            $activeSale->update([
+                'adult_price' => 0, // Birthday guest eats free
+                'discount' => $activeSale->adult_price, 
+                'item_note' => 'Birthday Reward Claimed'
+            ]);
+            
+            return response()->json(['msg' => 'Enjoy your meal!']);
+        }
+
+        return response()->json(['err' => 1, 'msg' => 'No active session found'], 404);
+    }
 }

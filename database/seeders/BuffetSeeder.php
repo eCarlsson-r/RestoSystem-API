@@ -55,5 +55,16 @@ class BuffetSeeder extends Seeder
         }
         
         DB::table('buffet_items')->insert($items);
+        
+        DB::table('branch_buffet')->insert([
+            [
+                'branch_id' => 1,
+                'buffet_id' => 1
+            ],
+            [
+                'branch_id' => 1,
+                'buffet_id' => 2
+            ]
+        ]);
     }
 }

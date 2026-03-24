@@ -2,18 +2,47 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Branch;
+use App\Models\Customer;
 use App\Models\Product;
+use App\Models\Sale;
+use App\Models\SaleRecord;
+use App\Models\Table;
 use App\Models\Reservation;
 use Illuminate\Http\Request;
+use App\Events\StationNotification;
 
 class OrderController
 {
+    public function callWaiter(Request $request) {
+        $request->validate([
+            'table_id' => 'required',
+            'branch_id' => 'required',
+            'request_type' => 'required'
+        ]);
+
+        $table = $request->table_id;
+        $branch = $request->branch_id;
+
+        broadcast(new StationNotification("waiter.{$branch}", [
+            'title' => "Table {$table} called!",
+            'type' => "called",
+            'body' => "Table {$table} has been called."
+        ]));
+
+        return response()->json(['msg' => 'Request sent']);
+    }
+
     public function store(Request $request) 
     {
+        $branch = Branch::where('slug', $request->branch)->first();
+        $customer = Customer::where('user_id', $request->user()->id)->first();
+
         $sale = Sale::create([
-            'branch_id' => $branch,
-            'table_id' => $request->input('table_id'),
-            'customer_id' => $request->user()->customer->id ?? $request->user()->id,
+            'branch_id' => $branch->id,
+            'table_id' => $request->table,
+            'customer_id' => $customer->id,
+            'employee_id' => '1',
             'date' => now()->toDateString(),
             'time' => now()->toTimeString(),
             'status' => 'O',
@@ -21,7 +50,7 @@ class OrderController
         $salesId = $sale->id;
 
         // Mark table as Occupied
-        Table::findOrFail($request->input('table_id'))->update(['status' => 'occupied']);
+        Table::findOrFail($request->input('table'))->update(['status' => 'occupied']);
 
         $items = $request->items;
         $reservationId = $request->reservation_id;
@@ -45,13 +74,13 @@ class OrderController
             
             SaleRecord::create([
                 'sale_id' => $salesId,
-                'item_type' => $item['item_type'], // product or package
-                'item_code' => $item['item_code'],
+                'item_type' => $item['type'], // product or package
+                'item_code' => $product->id,
                 'quantity' => $item['quantity'],
-                'item_price' => $item['item_price'],
+                'item_price' => $item['price'],
                 'item_status' => 'O',
                 'item_note' => $item['item_note'] ?? '',
-                'order_employee' => $request->user()->employee->id
+                'order_employee' => '1'
             ]);
         }
 

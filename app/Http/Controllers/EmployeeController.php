@@ -47,7 +47,7 @@ class EmployeeController
                     'phone' => $request->input('phone'),
                     'mobile' => $request->input('mobile'),
                     'email' => $request->input('email'),
-                    'account_id' => $user ? $user->id : null,
+                    'user_id' => $user ? $user->id : null,
                 ]
             );
 

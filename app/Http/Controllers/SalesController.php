@@ -408,6 +408,14 @@ class SalesController
             ], $payments);
         })->values();
 
+        if ($invoice && $sale->customer) {
+            $earnedPoints = floor($invoice->pay_amount / Customer::POINT_RATIO);
+            
+            $sale->customer->increment('points', $earnedPoints);
+            
+            // Optional: Log this in a 'point_history' table for the UI
+        }
+
         return response()->json([
             'err' => 0,
             'msg' => '',

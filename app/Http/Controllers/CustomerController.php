@@ -52,4 +52,25 @@ class CustomerController
         Customer::destroy($id);
         return response()->json(['err' => 0, 'msg' => 'Customer removed']);
     }
+    
+    public function history(Request $request) {
+        $user = $request->user();
+        $customer = Customer::where('user_id', $user->id)->first();
+        
+        // Ensure user has a customer profile
+        if (!$customer) {
+            return response()->json(['err' => 1, 'msg' => 'Customer profile not found'], 404);
+        }
+
+        $history = $customer->sales()
+            ->with(['invoices', 'records.product', 'branch']) 
+            ->latest()
+            ->get();
+
+        return response()->json([
+            'err' => 0,
+            'msg' => 'Success',
+            'data' => $history
+        ]);
+    }
 }

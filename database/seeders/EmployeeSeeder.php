@@ -23,7 +23,7 @@ class EmployeeSeeder extends Seeder
                 'phone' => '0',
                 'mobile' => '',
                 'email' => 'waitress@demo.com',
-                'account_id' => 2, // demo.waiter
+                'user_id' => 2, // demo.waiter
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -40,7 +40,7 @@ class EmployeeSeeder extends Seeder
                 'phone' => '0',
                 'mobile' => '',
                 'email' => 'cashier@demo.com',
-                'account_id' => 3, // demo.cashier
+                'user_id' => 3, // demo.cashier
                 'created_at' => now(),
                 'updated_at' => now(),
             ],

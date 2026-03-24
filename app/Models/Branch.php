@@ -38,6 +38,11 @@ class Branch extends Model
         return $this->belongsToMany(Product::class)->withPivot('is_active')->withTimestamps();
     }
 
+    public function buffets() 
+    {
+        return $this->belongsToMany(Buffet::class, 'branch_buffet');
+    }
+
     public function getTotalCapacityAttribute()
     {
         return $this->tables()->sum('capacity');
