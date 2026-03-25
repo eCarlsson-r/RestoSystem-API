@@ -26,21 +26,10 @@ class NotificationController
             $request->input('contentEncoding')
         );
 
-        $subscription = NotificationSubscription::updateOrCreate(
-            [
-                'user_id' => $request->input('login-id'),
-                'endpoint' => $request->input('endpoint')
-            ],
-            [
-                'public_key' => $request->input('publicKey'),
-                'auth_token' => $request->input('authToken')
-            ]
-        );
-
         return response()->json([
             'err' => 0,
             'msg' => 'Notification subscribed successfully',
-            'data' => $subscription
+            'data' => $user
         ]);
     }
 
@@ -54,10 +43,6 @@ class NotificationController
         $user = User::find($request->input('login-id'));
 
         $user->deletePushSubscription($request->input('endpoint'));
-
-        NotificationSubscription::where('user_id', $request->input('login-id'))
-            ->where('endpoint', $request->input('endpoint'))
-            ->delete();
 
         return response()->json([
             'err' => 0,

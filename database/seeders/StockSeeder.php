@@ -13,7 +13,7 @@ class StockSeeder extends Seeder
             [
                 'item_type' => 'INGR',
                 'item_code' => '1', // Salt
-                'branch_id' => '001',
+                'branch_id' => '1',
                 'storage' => 'MAIN',
                 'purchase_price' => 5000,
                 'quantity' => 10,
@@ -23,7 +23,7 @@ class StockSeeder extends Seeder
             [
                 'item_type' => 'INGR',
                 'item_code' => '2', // Sugar
-                'branch_id' => '001',
+                'branch_id' => '1',
                 'storage' => 'MAIN',
                 'purchase_price' => 12000,
                 'quantity' => 5,
@@ -33,7 +33,7 @@ class StockSeeder extends Seeder
             [
                 'item_type' => 'PREP',
                 'item_code' => '1', // Chili Sauce
-                'branch_id' => '001',
+                'branch_id' => '1',
                 'storage' => 'MAIN',
                 'purchase_price' => 5000,
                 'quantity' => 10,

@@ -18,7 +18,8 @@ class Reservation extends Model
     protected $guarded = ['id'];
 
     protected $casts = [
-        'event_date' => 'date',
+        'event_date' => 'datetime:Y-m-d',
+        'event_time' => 'datetime:H:i',
         'deposit_amount' => 'decimal:2',
     ];
 

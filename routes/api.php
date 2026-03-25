@@ -37,6 +37,7 @@ Route::prefix('public')->group(function () {
     Route::get('/buffets', [BuffetController::class, 'index']);
     Route::get('/categories', [CategoryController::class, 'index']);
     Route::post('/call-waiter', [OrderController::class, 'callWaiter']);
+    Route::get('/table/{id}', [TableController::class, 'show']);
 });
 
 Route::post('/login', [AuthController::class, 'login']);
@@ -48,6 +49,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index']);
     Route::get('/user/history', [CustomerController::class, 'history']);
     Route::post('/orders', [OrderController::class, 'store']);
+    Route::post('/public/reservations', [ReservationController::class, 'reserve']);
 
     Route::prefix('tables')->group(function () {
         Route::get('/', [TableController::class, 'index']);

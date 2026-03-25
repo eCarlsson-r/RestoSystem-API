@@ -43,6 +43,12 @@ class TableController
         return response()->json(['err' => 0, 'msg' => 'Table saved', 'data' => $table]);
     }
 
+    public function show($id)
+    {
+        $table = Table::with('branch')->find($id);
+        return response()->json(['err' => 0, 'msg' => '', 'data' => $table]);
+    }
+
     public function useTable(Request $request)
     {
         $table = Table::find($request->table_id);

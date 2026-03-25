@@ -40,7 +40,6 @@ class SalesController
         ]);
     }
 
-    // app/Http/Controllers/Api/OrderController.php
     public function getActiveSession($tableId) {
         $sale = Sale::where('table_id', $tableId)
                     ->where('status', 'O')
@@ -408,14 +407,6 @@ class SalesController
             ], $payments);
         })->values();
 
-        if ($invoice && $sale->customer) {
-            $earnedPoints = floor($invoice->pay_amount / Customer::POINT_RATIO);
-            
-            $sale->customer->increment('points', $earnedPoints);
-            
-            // Optional: Log this in a 'point_history' table for the UI
-        }
-
         return response()->json([
             'err' => 0,
             'msg' => '',
@@ -544,21 +535,26 @@ class SalesController
                 Table::findOrFail($tableId)->update(['status' => 'available']);
             }
 
+            if ($sale->customer) {
+                $earnedPoints = floor($totalToPay / Customer::POINT_RATIO);
+                $sale->customer->increment('points', $earnedPoints);
+            }
+
             // Trigger Kitchen Notification
-            broadcast(new StationNotification('kitchen', [
+            StationNotification::notifySubscribers('kitchen', [
                 'title' => 'Pesanan Baru',
                 'type' => 'pendingorder',
                 'sales-id' => $sale->id,
                 'table-number' => $sale->table_number,
                 'body' => "Pesanan di Meja {$sale->table_number}"
-            ]));
+            ]);
 
             // Trigger Admin Notification
-            broadcast(new StationNotification('admin', [
+            StationNotification::notifySubscribers('admin', [
                 'title' => 'Pesanan Baru',
                 'type' => 'sales',
                 'body' => "Pesanan di Meja {$sale->table_number}"
-            ]));
+            ]);
 
             return response()->json([
                 'err' => 0, 
@@ -620,8 +616,6 @@ class SalesController
             return response()->json(['err' => 0, 'msg' => 'Orders merged successfully']);
         });
     }
-
-    // app/Http/Controllers/Api/SalesController.php
 
     public function moveTable(Request $request) {
         return DB::transaction(function() use ($request) {

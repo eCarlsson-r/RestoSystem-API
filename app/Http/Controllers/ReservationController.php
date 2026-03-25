@@ -54,6 +54,28 @@ class ReservationController
         return response()->json($reservation->load(['customer', 'buffet']), 201);
     }
 
+    public function reserve(Request $request) {
+        $validated = $request->validate([
+            'branch_id'       => 'required|exists:branches,id',
+            'buffet_id'       => 'required|exists:buffets,id',
+            'deposit'    => 'nullable|numeric',
+            'notes'             => 'nullable|string',
+        ]);
+
+        // Auto-assign the branch and user from the authenticated session
+        $user = $request->user()->load('customer');
+        $validated['event_date'] = explode('T', $request->datetime)[0];
+        $validated['event_time'] = explode('T', $request->datetime)[1];
+        $validated['guaranteed_pax'] = $request->pax;
+        $validated['customer_id'] = $user->customer->id ?? 1;
+        $validated['employee_id'] = 1;
+        $validated['status']    = 'pending'; // Default for staff-entry
+
+        $reservation = Reservation::create($validated);
+
+        return response()->json($reservation, 201);
+    }
+
     /**
      * Convert Reservation to an Active Sale (Check-In)
      */

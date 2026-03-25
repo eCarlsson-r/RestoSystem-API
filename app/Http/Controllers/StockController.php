@@ -316,12 +316,12 @@ class StockController
                 "MAIN" => "Main Storage"
             };
 
-            broadcast(new StationNotification("admin", [
+            StationNotification::notifySubscribers("admin", [
                 'title' => "New Request",
                 'type' => 'request',
                 'request_id' => $kitchenRequest->id,
                 'body' => "New request from {$fromBranch} {$fromStorage}"
-            ]));
+            ]);
 
             return response()->json([
                 'err' => 0,

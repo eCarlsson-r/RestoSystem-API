@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Employee;
 use App\Models\Customer;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
@@ -26,17 +27,17 @@ class AuthController
                 $employee = Employee::where('user_id', $user->id)->with(['branch'])->first();
                 $token = auth()->user()->createToken('auth_token')->plainTextToken;
                 if ($employee) $user->employee = $employee;
-                return response()->json(['user' => $user, 'token' => $token], 200);
+                return response()->json(['err' => 0, 'msg' => 'Login successful', 'data' => [$user], 'token' => $token], 200);
             } else {
                 auth()->logout();
-                return response()->json(['origin' => $origin, 'type' => $user->type, 'message' => 'Username or Password is invalid'], 401);
+                return response()->json(['err' => 1, 'msg' => 'Username or Password is invalid', 'data' => []], 401);
             }
         } else if (!$user) {
-            return response()->json(['message' => 'No account exist with the given username.'], 401);
+            return response()->json(['err' => 1, 'msg' => 'No account exist with the given username.', 'data' => []], 401);
         } else if (!Hash::check($request->password, $user->password)) {
-            return response()->json(['message' => 'Password is incorrect.'], 401);
+            return response()->json(['err' => 1, 'msg' => 'Password is incorrect.', 'data' => []], 401);
         } else {
-            return response()->json(['message' => 'Username or Password is invalid'], 401);
+            return response()->json(['err' => 1, 'msg' => 'Username or Password is invalid', 'data' => []], 401);
         }
     }
 

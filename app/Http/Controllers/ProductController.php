@@ -49,13 +49,13 @@ class ProductController
             'is_active' => !$isSoldOut 
         ]);
 
-        broadcast(new StationNotification("waiter.{$waiterId}", [
+        StationNotification::notifySubscribers("branch.{$branchId}", [
             'title' => "Product {$productId} status changed!",
-            'type' => $soldout ? 'soldout' : 'available',
+            'type' => $isSoldOut ? 'soldout' : 'available',
             'product_id' => $productId,
-            'body' => "Product {$productId} has been changed to " . ($soldout ? 'Sold Out' : 'Available')
-        ]));
-
+            'body' => "Product {$productId} has been changed to " . ($isSoldOut ? 'Sold Out' : 'Available')
+        ]);
+        
         return response()->json([
             'err' => 0,
             'msg' => 'Product status updated',

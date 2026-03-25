@@ -56,6 +56,11 @@ class User extends Authenticatable
         return $this->hasOne(Employee::class, 'user_id');
     }
 
+    public function customer()
+    {
+        return $this->hasOne(Customer::class, 'user_id');
+    }
+
     public function subscriptions()
     {
         return $this->hasMany(NotificationSubscription::class);

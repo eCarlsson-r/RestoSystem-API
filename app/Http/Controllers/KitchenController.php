@@ -174,12 +174,12 @@ class KitchenController
         $sale->save();
 
         // Broadcast to the Waiters
-        broadcast(new StationNotification("waiter.{$sale->branch_id}", [
+        StationNotification::notifySubscribers("branch.{$sale->branch_id}", [
             'title' => 'Pesanan Siap Dihidangkan',
             'type' => 'sales',
             'sales-id' => $id,
             'body' => "Meja {$sale->table->table_number} Lantai {$sale->table->floor_number} siap!"
-        ]));
+        ]);
 
         return response()->json([
             'err' => 0,

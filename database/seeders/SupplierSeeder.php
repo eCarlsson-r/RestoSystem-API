@@ -13,7 +13,7 @@ class SupplierSeeder extends Seeder
             [
                 'id' => 1,
                 'name' => 'Supplier A',
-                'branch_id' => '001',
+                'branch_id' => '1',
                 'storage' => 'MAIN',
                 'contact_person' => 'John Doe',
                 'phone' => '08123456789',
@@ -23,7 +23,7 @@ class SupplierSeeder extends Seeder
             [
                 'id' => 2,
                 'name' => 'Supplier B',
-                'branch_id' => '001',
+                'branch_id' => '1',
                 'storage' => 'MAIN',
                 'contact_person' => 'Jane Smith',
                 'phone' => '08987654321',

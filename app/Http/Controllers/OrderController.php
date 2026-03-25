@@ -22,15 +22,23 @@ class OrderController
         ]);
 
         $table = $request->table_id;
-        $branch = $request->branch_id;
+        $branch = Branch::where('slug', $request->branch_id)->first();
 
-        broadcast(new StationNotification("waiter.{$branch}", [
-            'title' => "Table {$table} called!",
-            'type' => "called",
-            'body' => "Table {$table} has been called."
-        ]));
+        try {
+            StationNotification::notifySubscribers("branch.{$branch->id}", [
+                'title' => "Table {$table} called!",
+                'type' => "called",
+                'body' => "Table {$table} has been called."
+            ]);
 
-        return response()->json(['msg' => 'Request sent']);
+            return response()->json(['status' => 'success', 'msg' => 'Request sent successfully']);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error', 
+                'msg' => 'Notification service unavailable', 
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function store(Request $request) 
