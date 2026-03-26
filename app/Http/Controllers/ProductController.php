@@ -14,8 +14,12 @@ class ProductController
     {
         $query = Product::with(['category', 'recipe.item', 'files']);
         
-        if (!$request->has('all')) {
-            $query->where('soldout', 0);
+        if ($request->has('sales_id')) {
+            $branch = Sales::find($request->sales_id)->branch_id;
+            $query->whereHas('branches', function($bQuery) use ($branch) {
+                $bQuery->where('branches.id', $branch)
+                    ->where('branch_product.is_active', true);
+            });
         }
         
         if ($request->has('category')) {

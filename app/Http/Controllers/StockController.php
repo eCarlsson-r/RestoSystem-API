@@ -24,7 +24,7 @@ class StockController
         if ($request->has('storage')) {
             $query->where('storage', $request->storage);
         }
-        $stocks = $query->with(['branch', 'ingredient', 'utility'])->get();
+        $stocks = $query->with(['branch'])->get();
 
         return response()->json([
             'err' => 0,
@@ -40,7 +40,7 @@ class StockController
         $end = $request->end . ' 23:59:59';
 
         // 1. Get the relevant stock items
-        $query = Stock::with(['ingredient', 'utility']);
+        $query = Stock::query();
         
         if ($branch != 0) {
             $query->where('branch_id', $branch)->where('storage', $storage);
@@ -74,16 +74,12 @@ class StockController
 
             return [
                 'item_code' => $first->item_code,
-                'item_name' => $first->item_type === 'INGR' 
-                            ? $first->ingredient->name 
-                            : $first->utility->name,
+                'item_name' => $first->item_name,
                 'opening' => (float)$opening,
                 'qty_in'  => (float)$in,
                 'qty_out' => (float)$out,
                 'closing' => (float)($opening + $in - $out),
-                'unit'    => $first->item_type === 'INGR' 
-                            ? $first->ingredient->unit 
-                            : 'pcs'
+                'unit'    => $first->unit || 'pcs'
             ];
         })->values();
 
@@ -283,7 +279,7 @@ class StockController
 
     public function kitchenRequest(Request $request)
     {
-        $request = KitchenRequest::with('from_branch', 'to_branch', 'items', 'items.ingredient', 'items.utility')->get();
+        $request = KitchenRequest::with(['from_branch', 'to_branch', 'items'])->get();
         return response()->json([
             'err' => 0,
             'msg' => '',
