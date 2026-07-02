@@ -25,7 +25,7 @@ use App\Http\Controllers\StockController;
 use App\Http\Controllers\PrepareController;
 use App\Http\Controllers\OrderController;
 use Illuminate\Support\Facades\Route;
-
+    
 Route::prefix('public')->group(function () {
     Route::get('/home', [DashboardController::class, 'landingPage']);
     Route::get('/branches', [BranchController::class, 'index']);
@@ -41,7 +41,9 @@ Route::prefix('public')->group(function () {
 });
 
 Route::post('/login', [AuthController::class, 'login']);
-Route::post('/register', [AuthController::class, 'register']);
+Route::post('/register', [AuthController::class, 'register']);    
+Route::post('/reservation-agent/chat', [ReservationAgentController::class, 'chat']);
+Route::get('/reservation-agent/stream', [ReservationAgentController::class, 'stream']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
