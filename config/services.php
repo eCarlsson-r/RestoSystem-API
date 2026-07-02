@@ -39,6 +39,7 @@ return [
         'project_id' => env('BIGQUERY_PROJECT_ID', env('VERTEX_PROJECT_ID')),
         'dataset' => env('BIGQUERY_DATASET', 'restosystem_raw'),
         'credentials' => env('GOOGLE_APPLICATION_CREDENTIALS'),
+        'credentials_json' => env('GOOGLE_APPLICATION_CREDENTIALS_JSON'),
         'cache_ttl' => env('BIGQUERY_CACHE_TTL', 600),
     ],
 

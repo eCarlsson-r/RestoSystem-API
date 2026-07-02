@@ -60,15 +60,20 @@ class AnalyticsController
             "bq:{$view}" . ($cacheSuffix ? ":{$cacheSuffix}" : ''),
             (int) $config['cache_ttl'],
             function () use ($view, $where, $orderBy, $limit, $config, $select) {
-                $credentials = $config['credentials'];
-                if ($credentials && ! str_starts_with($credentials, '/')) {
-                    $credentials = base_path($credentials);
+                $options = ['projectId' => $config['project_id']];
+
+                // Prefer inline JSON (e.g. a Coolify secret env var) so production
+                // never needs the key file on disk; fall back to a key file path.
+                if ($config['credentials_json']) {
+                    $options['keyFile'] = json_decode($config['credentials_json'], true);
+                } elseif ($credentials = $config['credentials']) {
+                    if (! str_starts_with($credentials, '/')) {
+                        $credentials = base_path($credentials);
+                    }
+                    $options['keyFilePath'] = $credentials;
                 }
 
-                $bigQuery = new BigQueryClient([
-                    'projectId' => $config['project_id'],
-                    'keyFilePath' => $credentials,
-                ]);
+                $bigQuery = new BigQueryClient($options);
 
                 $sql = "SELECT {$select} FROM `{$config['project_id']}.{$config['dataset']}.{$view}`";
                 if ($where) {
