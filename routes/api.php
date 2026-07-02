@@ -43,8 +43,6 @@ Route::prefix('public')->group(function () {
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);    
-Route::post('/reservation-agent/chat', [ReservationAgentController::class, 'chat']);
-Route::get('/reservation-agent/stream', [ReservationAgentController::class, 'stream']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -223,4 +221,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/purchase', [PurchasingController::class, 'reportPurchase']);
         Route::get('/supplier', [PurchasingController::class, 'reportSupplierPurchase']);
     });
+    
+    Route::post('/reservation-agent/chat', [ReservationAgentController::class, 'chat']);
+    Route::get('/reservation-agent/stream', [ReservationAgentController::class, 'stream']);
 });
