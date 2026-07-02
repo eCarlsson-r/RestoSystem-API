@@ -1,23 +1,25 @@
 providers = ["php", "node"]
 
-[variables]
-  APP_ENV = "production"
-  APP_DEBUG = "false"
-  LOG_CHANNEL = "stderr"
-
 [phases.setup]
-aptPkgs = ["nginx", "supervisor"]
-
-[phases.install]
-cmds = [
-    "composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader",
-    "npm install"
+nixPkgs = []
+aptPkgs = [
+    "nginx",
+    "supervisor",
+    "php8.4-cli",
+    "php8.4-fpm",
+    "php8.4-mysql",
+    "php8.4-mbstring",
+    "php8.4-xml",
+    "php8.4-zip",
+    "php8.4-gd",
+    "php8.4-bcmath",
+    "php8.4-curl",
+    "php8.4-redis",
+    "composer"
 ]
 
 [phases.build]
-dependsOn = ["install"]
 cmds = [
-    "npm run build",
     "mkdir -p /etc/supervisor/conf.d/",
     "cp /assets/worker-nginx.conf /etc/supervisor/conf.d/",
     "cp /assets/worker-phpfpm.conf /etc/supervisor/conf.d/",
@@ -45,17 +47,15 @@ mkdir -p storage/app/payslips storage/fonts storage/logs \
          storage/framework/cache storage/framework/sessions storage/framework/views \
          bootstrap/cache
 
-chown -R www-data:www-data storage bootstrap/cache || true
-chmod -R 775 storage bootstrap/cache || true
+chown -R www-data:www-data storage bootstrap/cache
+chmod -R 775 storage bootstrap/cache
 
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
-# Use Nixpacks template script to parse Nginx config
 node /assets/scripts/prestart.mjs /assets/nginx.template.conf /etc/nginx.conf
 
-# Start Supervisor (which starts Nginx, PHP-FPM, and Reverb)
 supervisord -c /etc/supervisord.conf -n
 '''
 
@@ -97,8 +97,7 @@ stderr_logfile=/var/log/worker-nginx.log
 "worker-phpfpm.conf" = '''
 [program:worker-phpfpm]
 process_name=%(program_name)s_%(process_num)02d
-# Nixpacks PHP-FPM binary is simply "php-fpm"
-command=php-fpm -y /assets/php-fpm.conf -F
+command=php-fpm8.3 -y /assets/php-fpm.conf -F
 autostart=true
 autorestart=true
 stdout_logfile=/var/log/worker-phpfpm.log
@@ -108,8 +107,7 @@ stderr_logfile=/var/log/worker-phpfpm.log
 "worker-reverb.conf" = '''
 [program:worker-reverb]
 process_name=%(program_name)s_%(process_num)02d
-# Nixpacks PHP binary is simply "php"
-command=php /app/artisan reverb:start --host=127.0.0.1 --port=8080
+command=/usr/bin/php8.3 /app/artisan reverb:start --host=127.0.0.1 --port=8080
 directory=/app
 user=www-data
 autostart=true
