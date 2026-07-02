@@ -1,5 +1,4 @@
-[providers]
-  php = "8.2"
+providers = ["php"]
 
 [variables]
   APP_ENV = "production"
