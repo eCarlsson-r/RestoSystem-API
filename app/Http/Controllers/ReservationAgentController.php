@@ -2,11 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Ai\Agents\ReservationAgent;
 use Illuminate\Http\Request;
 
-class ReservationAgentController extends Controller
+class ReservationAgentController
 {
     public function chat(Request $request)
     {
