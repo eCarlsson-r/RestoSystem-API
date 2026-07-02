@@ -40,6 +40,7 @@ return [
         'dataset' => env('BIGQUERY_DATASET', 'restosystem_raw'),
         'credentials' => env('GOOGLE_APPLICATION_CREDENTIALS'),
         'credentials_json' => env('GOOGLE_APPLICATION_CREDENTIALS_JSON'),
+        'credentials_base64' => env('GOOGLE_APPLICATION_CREDENTIALS_BASE64'),
         'cache_ttl' => env('BIGQUERY_CACHE_TTL', 600),
     ],
 

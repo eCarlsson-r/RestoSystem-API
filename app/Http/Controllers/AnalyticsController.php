@@ -62,9 +62,12 @@ class AnalyticsController
             function () use ($view, $where, $orderBy, $limit, $config, $select) {
                 $options = ['projectId' => $config['project_id']];
 
-                // Prefer inline JSON (e.g. a Coolify secret env var) so production
-                // never needs the key file on disk; fall back to a key file path.
-                if ($config['credentials_json']) {
+                // Prefer inline credentials (secret env vars) so production never
+                // needs the key file on disk; fall back to a key file path.
+                // Base64 survives env-file parsers that choke on raw JSON.
+                if ($config['credentials_base64']) {
+                    $options['keyFile'] = json_decode(base64_decode($config['credentials_base64']), true);
+                } elseif ($config['credentials_json']) {
                     $options['keyFile'] = json_decode($config['credentials_json'], true);
                 } elseif ($credentials = $config['credentials']) {
                     if (! str_starts_with($credentials, '/')) {
