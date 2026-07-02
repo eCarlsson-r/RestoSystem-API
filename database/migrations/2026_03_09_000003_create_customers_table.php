@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('email', 50)->nullable();
             $table->integer('discount')->default(0);
             $table->integer('tax')->default(0);
+            $table->foreignId('user_id')->constrained('users')->onUpdate('cascade')->onDelete('cascade')->nullable();
             $table->timestamps();
         });
     }
