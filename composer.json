@@ -13,7 +13,7 @@
         "google/cloud-ai-platform": "^1.60",
         "google/cloud-bigquery": "^1.38",
         "laravel-notification-channels/webpush": "^10.5",
-        "laravel/ai": "^0.7.2",
+        "laravel/ai": "^0.6",
         "laravel/framework": "^12.0",
         "laravel/reverb": "^1.8",
         "laravel/sanctum": "^4.0",
