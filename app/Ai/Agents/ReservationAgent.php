@@ -17,7 +17,7 @@ use Laravel\Ai\Enums\Lab;
 use Laravel\Ai\Promptable;
 
 #[Provider(Lab::Gemini)]
-#[Model('gemini-2.0-flash-001')]
+#[Model('gemini-3.5-flash')]
 #[Temperature(0.4)]
 class ReservationAgent implements Agent, Conversational, HasTools
 {
