@@ -25,6 +25,7 @@ use App\Http\Controllers\StockController;
 use App\Http\Controllers\PrepareController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ReservationAgentController;
+use App\Http\Controllers\AnalyticsController;
 use Illuminate\Support\Facades\Route;
     
 Route::prefix('public')->group(function () {
@@ -224,4 +225,13 @@ Route::middleware('auth:sanctum')->group(function () {
     
     Route::post('/reservation-agent/chat', [ReservationAgentController::class, 'chat']);
     Route::get('/reservation-agent/stream', [ReservationAgentController::class, 'stream']);
+
+    Route::prefix('analytics')->group(function () {
+        Route::get('/menu-performance', [AnalyticsController::class, 'menuPerformance']);
+        Route::get('/daily-sales', [AnalyticsController::class, 'dailySales']);
+        Route::get('/stock-levels', [AnalyticsController::class, 'stockLevels']);
+        Route::get('/reservations', [AnalyticsController::class, 'reservations']);
+        Route::get('/menu-clusters', [AnalyticsController::class, 'menuClusters']);
+        Route::get('/demand-forecast', [AnalyticsController::class, 'demandForecast']);
+    });
 });
