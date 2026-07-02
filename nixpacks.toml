@@ -4,7 +4,7 @@ providers = ["php"]
 # mbstring/pdo_mysql/xml/curl/zip/gd/bcmath are already in Nix PHP's default extension set;
 # extensions must be composed via withExtensions — standalone php83Extensions.* packages never load.
 nixPkgs = [
-    "(php83.withExtensions (pe: pe.enabled ++ [ pe.redis ]))",
+    "(php83.withExtensions (pe: pe.enabled ++ [ pe.all.redis ]))",
     "php83Packages.composer",
     "nodejs_22"
 ]
