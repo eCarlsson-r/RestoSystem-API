@@ -24,6 +24,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\PrepareController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\ReservationAgentController;
 use Illuminate\Support\Facades\Route;
     
 Route::prefix('public')->group(function () {
