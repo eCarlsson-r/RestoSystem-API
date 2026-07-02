@@ -1,6 +1,13 @@
-providers = ["php", "node"]
+providers = ["php"]
 
 [phases.setup]
+# mbstring/pdo_mysql/xml/curl/zip/gd/bcmath are already in Nix PHP's default extension set;
+# extensions must be composed via withExtensions — standalone php83Extensions.* packages never load.
+nixPkgs = [
+    "(php83.withExtensions (pe: pe.enabled ++ [ pe.redis ]))",
+    "php83Packages.composer",
+    "nodejs_22"
+]
 aptPkgs = [
     "nginx",
     "supervisor"
@@ -8,6 +15,7 @@ aptPkgs = [
 
 [phases.build]
 cmds = [
+    "npm run build",
     "mkdir -p /etc/supervisor/conf.d/",
     "cp /assets/worker-nginx.conf /etc/supervisor/conf.d/",
     "cp /assets/worker-phpfpm.conf /etc/supervisor/conf.d/",
