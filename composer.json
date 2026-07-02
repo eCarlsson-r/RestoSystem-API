@@ -14,6 +14,7 @@
         "google/cloud-bigquery": "^1.38",
         "laravel-notification-channels/webpush": "^10.5",
         "laravel/ai": "^0.6",
+        "predis/predis": "^2.3",
         "laravel/framework": "^12.0",
         "laravel/reverb": "^1.8",
         "laravel/sanctum": "^4.0",
