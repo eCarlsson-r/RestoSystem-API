@@ -9,7 +9,7 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.2",
+        "php": "^8.4",
         "google/cloud-ai-platform": "^1.60",
         "laravel-notification-channels/webpush": "^10.5",
         "laravel/ai": "^0.7.2",
