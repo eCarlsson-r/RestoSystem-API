@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Controller;
 use App\Ai\Agents\ReservationAgent;
 use Illuminate\Http\Request;
 
