@@ -40,6 +40,8 @@ Route::prefix('public')->group(function () {
     Route::get('/categories', [CategoryController::class, 'index']);
     Route::post('/call-waiter', [OrderController::class, 'callWaiter']);
     Route::get('/table/{id}', [TableController::class, 'show']);
+    Route::post('/reservation-agent/chat', [ReservationAgentController::class, 'publicChat'])
+        ->middleware('throttle:15,1');
 });
 
 Route::post('/login', [AuthController::class, 'login']);
