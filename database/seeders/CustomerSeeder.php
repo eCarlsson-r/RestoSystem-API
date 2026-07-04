@@ -12,6 +12,7 @@ class CustomerSeeder extends Seeder
         DB::table('customers')->insert([
             [
                 'id' => 1,
+                'user_id' => 6,
                 'name' => 'Demo Customer',
                 'gender' => 'M',
                 'pob' => 'Meda',

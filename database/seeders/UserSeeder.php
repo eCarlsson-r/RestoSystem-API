@@ -60,6 +60,16 @@ class UserSeeder extends Seeder
                 'type' => 'BARTENDER',
                 'created_at' => now(),
                 'updated_at' => now(),
+            ],
+            [
+                'id' => 6,
+                'name' => 'Demo Customer',
+                'email' => 'customer@demo.com',
+                'username' => 'demo.customer',
+                'password' => Hash::make('Cm12345'),
+                'type' => 'CUSTOMER',
+                'created_at' => now(),
+                'updated_at' => now(),
             ]
         ]);
     }
