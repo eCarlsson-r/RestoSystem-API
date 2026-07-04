@@ -18,12 +18,12 @@ class AuthController
 
         if (auth()->attempt($credentials)) {
             $origin = $request->header('Origin');
-            if ($origin == env('STORE_URL') && $user->type == 'CUSTOMER') {
+            if ($origin == config('services.frontends.store_url') && $user->type == 'CUSTOMER') {
                 $customer = Customer::with('sales')->where('user_id', $user->id)->first();
                 $token = auth()->user()->createToken('member_token')->plainTextToken;
                 if ($customer) $user->customer = $customer;
                 return response()->json(['user' => $user, 'token' => $token], 200);
-            } else if ($origin == env('POS_URL') && in_array($user->type, ['ADMIN', 'PURCHASING', 'KITCHEN', 'CASHIER', 'WAITER'])) {
+            } else if ($origin == config('services.frontends.pos_url') && in_array($user->type, ['ADMIN', 'PURCHASING', 'KITCHEN', 'CASHIER', 'WAITER'])) {
                 $employee = Employee::where('user_id', $user->id)->with(['branch'])->first();
                 $token = auth()->user()->createToken('auth_token')->plainTextToken;
                 if ($employee) $user->employee = $employee;
@@ -45,14 +45,14 @@ class AuthController
     {
         $origin = $request->header('Origin');
         $user = $request->user();
-        if ($origin == env('STORE_URL') && $user->type == 'CUSTOMER') {
+        if ($origin == config('services.frontends.store_url') && $user->type == 'CUSTOMER') {
             $customer = Customer::with('sales')->where('user_id', $user->id)->first();
             return response()->json([
                 'err' => 0,
                 'msg' => '',
                 'data' => compact('user', 'customer')
             ]);
-        } else if ($origin == env('POS_URL') && in_array($user->type, ['ADMIN', 'PURCHASING', 'KITCHEN', 'CASHIER', 'WAITER'])) {
+        } else if ($origin == config('services.frontends.pos_url') && in_array($user->type, ['ADMIN', 'PURCHASING', 'KITCHEN', 'CASHIER', 'WAITER'])) {
             $employee = Employee::where('user_id', $user->id)->with(['branch'])->first();
             return response()->json([
                 'err' => 0,

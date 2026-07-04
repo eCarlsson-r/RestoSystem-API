@@ -25,6 +25,7 @@ use App\Http\Controllers\StockController;
 use App\Http\Controllers\PrepareController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ReservationAgentController;
+use App\Http\Controllers\StaffAssistantController;
 use App\Http\Controllers\AnalyticsController;
 use Illuminate\Support\Facades\Route;
     
@@ -227,6 +228,7 @@ Route::middleware('auth:sanctum')->group(function () {
     
     Route::post('/reservation-agent/chat', [ReservationAgentController::class, 'chat']);
     Route::get('/reservation-agent/stream', [ReservationAgentController::class, 'stream']);
+    Route::post('/staff-assistant/chat', [StaffAssistantController::class, 'chat']);
 
     Route::prefix('analytics')->group(function () {
         Route::get('/menu-performance', [AnalyticsController::class, 'menuPerformance']);

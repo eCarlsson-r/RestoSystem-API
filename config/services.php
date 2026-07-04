@@ -35,6 +35,11 @@ return [
         ],
     ],
 
+    'frontends' => [
+        'pos_url' => env('POS_URL'),
+        'store_url' => env('STORE_URL'),
+    ],
+
     'bigquery' => [
         'project_id' => env('BIGQUERY_PROJECT_ID', env('VERTEX_PROJECT_ID')),
         'dataset' => env('BIGQUERY_DATASET', 'restosystem_raw'),
